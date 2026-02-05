@@ -44,11 +44,19 @@ document.addEventListener("DOMContentLoaded", () => {
   // STOCK CARD CONFIG
   // ==========================
   const stocks = [
+    // ===== OLD 5 =====
     { cardClass: "nvidia-card", modalId: "nvdaDetails", chartId: "stockChartNvidia", livePriceId: "livePriceNvidia", dataId: "chart-data-nvidia", symbol: "NVDA", color: "#00c853" },
     { cardClass: "microsoft-card", modalId: "msftDetails", chartId: "stockChartMS", livePriceId: "livePriceMS", dataId: "chart-data-ms", symbol: "MSFT", color: "#2962ff" },
     { cardClass: "apple-card", modalId: "aaplDetails", chartId: "stockChartApple", livePriceId: "livePriceApple", dataId: "chart-data-apple", symbol: "AAPL", color: "#000000" },
     { cardClass: "amazon-card", modalId: "amznDetails", chartId: "stockChartAMZN", livePriceId: "livePriceAMZN", dataId: "chart-data-amzn", symbol: "AMZN", color: "#ff6d00" },
-    { cardClass: "google-card", modalId: "googDetails", chartId: "stockChartGOOG", livePriceId: "livePriceGoogle", dataId: "chart-data-goog", symbol: "GOOGL", color: "#fbbc05" }
+    { cardClass: "google-card", modalId: "googDetails", chartId: "stockChartGOOG", livePriceId: "livePriceGoogle", dataId: "chart-data-goog", symbol: "GOOGL", color: "#fbbc05" },
+
+    // ===== NEW 5 =====
+    { cardClass: "visa-card", modalId: "visaDetails", chartId: "stockChartVisa", livePriceId: "livePriceVisa", dataId: "chart-data-visa", symbol: "V", color: "#1a1f71" },
+    { cardClass: "meta-card", modalId: "metaDetails", chartId: "stockChartMeta", livePriceId: "livePriceMeta", dataId: "chart-data-meta", symbol: "META", color: "#1877f2" },
+    { cardClass: "tesla-card", modalId: "tslaDetails", chartId: "stockChartTesla", livePriceId: "livePriceTesla", dataId: "chart-data-tesla", symbol: "TSLA", color: "#cc0000" },
+    { cardClass: "berkshire-card", modalId: "brkDetails", chartId: "stockChartBRK", livePriceId: "livePriceBRK", dataId: "chart-data-brk", symbol: "BRK-B", color: "#5c4033" },
+    { cardClass: "jpm-card", modalId: "jpmDetails", chartId: "stockChartJPM", livePriceId: "livePriceJPM", dataId: "chart-data-jpm", symbol: "JPM", color: "#0a2540" }
   ];
 
   const modalOverlay = document.getElementById("modalOverlay");
@@ -60,15 +68,15 @@ document.addEventListener("DOMContentLoaded", () => {
   stocks.forEach(stock => {
     const card = document.querySelector(`.${stock.cardClass}`);
     const modal = document.getElementById(stock.modalId);
-    if (!modal) return;
+    if (!card || !modal) return;
 
     const closeBtn = modal.querySelector(".close-btn");
     const favBtn = modal.querySelector(".fav-btn");
     const fullscreenBtn = modal.querySelector(".fullscreen-btn");
 
     const dataEl = document.getElementById(stock.dataId);
-    const dates = JSON.parse(dataEl.dataset.dates || "[]");
-    const prices = JSON.parse(dataEl.dataset.prices || "[]").map(p => parseFloat(p));
+    const dates = JSON.parse(dataEl?.dataset.dates || "[]");
+    const prices = JSON.parse(dataEl?.dataset.prices || "[]").map(p => parseFloat(p));
 
     stockObjects[stock.modalId] = {
       modal,
@@ -124,7 +132,6 @@ document.addEventListener("DOMContentLoaded", () => {
       modalOverlay.style.pointerEvents = "auto";
 
       setTimeout(() => {
-        modal.offsetHeight;
         if (!stockObjects[stock.modalId].chart) {
           renderChart();
         }
@@ -140,12 +147,26 @@ document.addEventListener("DOMContentLoaded", () => {
     // CLOSE MODAL
     // ==========================
     function closeModal() {
+      if (document.fullscreenElement) {
+        document.exitFullscreen();
+      }
+
+      modal.classList.remove("fullscreen-mode");
       modal.classList.remove("show");
       modalOverlay.classList.remove("show");
       modalOverlay.style.pointerEvents = "none";
+      document.body.style.overflow = "auto";
+
+      const ch = stockObjects[stock.modalId].chart;
+      if (ch) {
+        setTimeout(() => {
+          ch.resize();
+          ch.update();
+        }, 200);
+      }
     }
 
-    if (card) card.addEventListener("click", openModal);
+    card.addEventListener("click", openModal);
     if (closeBtn) closeBtn.addEventListener("click", closeModal);
     if (favBtn) favBtn.addEventListener("click", () => favBtn.classList.toggle("active"));
 
@@ -177,11 +198,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // ==========================
   document.addEventListener("fullscreenchange", () => {
     if (!document.fullscreenElement) {
-      document.body.style.display = "none";
-      document.body.offsetHeight;
-      document.body.style.display = "";
-      window.scrollTo(0, 0);
-
       Object.values(stockObjects).forEach(obj => {
         if (obj.chart) {
           setTimeout(() => {
@@ -199,6 +215,8 @@ document.addEventListener("DOMContentLoaded", () => {
   async function fetchLiveData() {
     for (const st of stocks) {
       const obj = stockObjects[st.modalId];
+      if (!obj) continue;
+
       try {
         const res = await fetch(`/stock_data/${st.symbol}`);
         const data = await res.json();
@@ -233,15 +251,3 @@ document.addEventListener("DOMContentLoaded", () => {
   setInterval(fetchLiveData, 10000);
 
 });
-
-
-
-
-
-
-
-
-
-
-
-

@@ -5,14 +5,21 @@ import json
 app = Flask(__name__)
 
 # ✅ EODHD API KEY
-API_KEY = "69822f3295ab04.85754315"
+API_KEY = "698475278e7a48.32103149"
 
-# Stock symbols
+# ===== STOCK SYMBOLS =====
 SYMBOL_NVDA = "NVDA"
 SYMBOL_MSFT = "MSFT"
 SYMBOL_AAPL = "AAPL"
 SYMBOL_AMZN = "AMZN"
 SYMBOL_GOOG = "GOOG"
+
+# ===== NEW STOCK SYMBOLS =====
+SYMBOL_VISA = "V"
+SYMBOL_META = "META"
+SYMBOL_TSLA = "TSLA"
+SYMBOL_BRK = "BRK.B"
+SYMBOL_JPM = "JPM"
 
 
 @app.route("/")
@@ -55,55 +62,105 @@ def dashboard(username):
     dates_nvda, prices_nvda = get_history(SYMBOL_NVDA)
     current_price_nvda = get_live(SYMBOL_NVDA)
 
-    # ===== Microsoft =====
+    # ===== MICROSOFT =====
     dates_ms, prices_ms = get_history(SYMBOL_MSFT)
     current_price_msft = get_live(SYMBOL_MSFT)
 
-    # ===== Apple =====
+    # ===== APPLE =====
     dates_apple, prices_apple = get_history(SYMBOL_AAPL)
     current_price_apple = get_live(SYMBOL_AAPL)
 
-    # ===== Amazon =====
+    # ===== AMAZON =====
     dates_amzn, prices_amzn = get_history(SYMBOL_AMZN)
     current_price_amzn = get_live(SYMBOL_AMZN)
 
-    # ===== Google =====
+    # ===== GOOGLE =====
     dates_goog, prices_goog = get_history(SYMBOL_GOOG)
     current_price_goog = get_live(SYMBOL_GOOG)
+
+    # ===== VISA =====
+    dates_visa, prices_visa = get_history(SYMBOL_VISA)
+    current_price_visa = get_live(SYMBOL_VISA)
+
+    # ===== META =====
+    dates_meta, prices_meta = get_history(SYMBOL_META)
+    current_price_meta = get_live(SYMBOL_META)
+
+    # ===== TESLA =====
+    dates_tsla, prices_tsla = get_history(SYMBOL_TSLA)
+    current_price_tsla = get_live(SYMBOL_TSLA)
+
+    # ===== BERKSHIRE =====
+    dates_brk, prices_brk = get_history(SYMBOL_BRK)
+    current_price_brk = get_live(SYMBOL_BRK)
+
+    # ===== JPMORGAN =====
+    dates_jpm, prices_jpm = get_history(SYMBOL_JPM)
+    current_price_jpm = get_live(SYMBOL_JPM)
 
     return render_template(
         "dashboard.html",
         username=username,
 
-        # NVIDIA
+        # ===== NVIDIA =====
         symbol=SYMBOL_NVDA,
         price=current_price_nvda,
         dates=json.dumps(dates_nvda),
         prices=json.dumps(prices_nvda),
 
-        # MICROSOFT
+        # ===== MICROSOFT =====
         symbol_ms=SYMBOL_MSFT,
         price_ms=current_price_msft,
         dates_ms=json.dumps(dates_ms),
         prices_ms=json.dumps(prices_ms),
 
-        # APPLE
+        # ===== APPLE =====
         symbol_apple=SYMBOL_AAPL,
         price_apple=current_price_apple,
         dates_apple=json.dumps(dates_apple),
         prices_apple=json.dumps(prices_apple),
 
-        # AMAZON
+        # ===== AMAZON =====
         symbol_amzn=SYMBOL_AMZN,
         price_amzn=current_price_amzn,
         dates_amzn=json.dumps(dates_amzn),
         prices_amzn=json.dumps(prices_amzn),
 
-        # GOOGLE
+        # ===== GOOGLE =====
         symbol_goog=SYMBOL_GOOG,
         price_goog=current_price_goog,
         dates_goog=json.dumps(dates_goog),
-        prices_goog=json.dumps(prices_goog)
+        prices_goog=json.dumps(prices_goog),
+
+        # ===== VISA =====
+        symbol_visa=SYMBOL_VISA,
+        price_visa=current_price_visa,
+        dates_visa=json.dumps(dates_visa),
+        prices_visa=json.dumps(prices_visa),
+
+        # ===== META =====
+        symbol_meta=SYMBOL_META,
+        price_meta=current_price_meta,
+        dates_meta=json.dumps(dates_meta),
+        prices_meta=json.dumps(prices_meta),
+
+        # ===== TESLA =====
+        symbol_tsla=SYMBOL_TSLA,
+        price_tsla=current_price_tsla,
+        dates_tsla=json.dumps(dates_tsla),
+        prices_tsla=json.dumps(prices_tsla),
+
+        # ===== BERKSHIRE =====
+        symbol_brk=SYMBOL_BRK,
+        price_brk=current_price_brk,
+        dates_brk=json.dumps(dates_brk),
+        prices_brk=json.dumps(prices_brk),
+
+        # ===== JPMORGAN =====
+        symbol_jpm=SYMBOL_JPM,
+        price_jpm=current_price_jpm,
+        dates_jpm=json.dumps(dates_jpm),
+        prices_jpm=json.dumps(prices_jpm)
     )
 
 

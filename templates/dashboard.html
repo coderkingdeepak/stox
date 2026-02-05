@@ -15,11 +15,12 @@
 
 <body class="dashboard-body">
 
-<!-- Sidebar -->
+<!-- ================= SIDEBAR ================= -->
 <input type="checkbox" id="sidebarCheckbox" checked>
+
 <div class="sidebar" id="sidebar">
 
-  <label for="sidebarCheckbox" class="sidebar-toggle" title="Toggle Sidebar" aria-label="Toggle Sidebar">
+  <label for="sidebarCheckbox" class="sidebar-toggle">
     <i class="bx bx-sidebar"></i>
   </label>
 
@@ -52,96 +53,432 @@
   </div>
 </div>
 
-<!-- Main content -->
+<!-- ================= MAIN CONTENT ================= -->
 <div class="main-content">
   <h1>Welcome to Stock Dashboard</h1>
 
   <div class="stock-card-wrapper">
 
+    <!-- ===== ROW 1 ===== -->
     <div class="nvidia-card-container">
-      <div class="nvidia-card"><img src="{{ url_for('static', filename='images/NVIDIA-logo-BL.jpg') }}" class="nvidia-logo-full"></div>
+      <div class="nvidia-card">
+        <img src="{{ url_for('static', filename='images/NVIDIA-logo-BL.jpg') }}" class="nvidia-logo-full">
+      </div>
       <div class="nvidia-name-wrapper"><span class="nvidia-label">NVIDIA Corporation</span></div>
     </div>
 
     <div class="microsoft-card-container">
-      <div class="microsoft-card"><img src="{{ url_for('static', filename='images/microsoft logo.png') }}" class="microsoft-logo-full"></div>
+      <div class="microsoft-card">
+        <img src="{{ url_for('static', filename='images/microsoft-logo.png') }}" class="microsoft-logo-full">
+      </div>
       <div class="microsoft-name-wrapper"><span class="microsoft-label">Microsoft Corporation</span></div>
     </div>
 
     <div class="apple-card-container">
-      <div class="apple-card"><img src="{{ url_for('static', filename='images/apple-logo.jpg') }}" class="apple-logo-full"></div>
+      <div class="apple-card">
+        <img src="{{ url_for('static', filename='images/apple-logo.jpg') }}" class="apple-logo-full">
+      </div>
       <div class="apple-name-wrapper"><span class="apple-label">Apple Inc.</span></div>
     </div>
 
     <div class="amazon-card-container">
-      <div class="amazon-card"><img src="{{ url_for('static', filename='images/amazon-logo.png') }}" class="amazon-logo-full"></div>
+      <div class="amazon-card">
+        <img src="{{ url_for('static', filename='images/amazon-logo.png') }}" class="amazon-logo-full">
+      </div>
       <div class="amazon-name-wrapper"><span class="amazon-label">Amazon.com Inc.</span></div>
     </div>
 
     <div class="google-card-container">
-      <div class="google-card"><img src="{{ url_for('static', filename='images/google-logo.png') }}" class="google-logo-full"></div>
+      <div class="google-card">
+        <img src="{{ url_for('static', filename='images/google-logo.png') }}" class="google-logo-full">
+      </div>
       <div class="google-name-wrapper"><span class="google-label">Alphabet Inc.</span></div>
+    </div>
+
+    <!-- ===== ROW 2 ===== -->
+    <div class="visa-card-container">
+      <div class="visa-card">
+        <img src="{{ url_for('static', filename='images/visa-logo.png') }}" class="visa-logo-full">
+      </div>
+      <div class="visa-name-wrapper"><span class="visa-label">Visa Inc.</span></div>
+    </div>
+
+    <div class="meta-card-container">
+      <div class="meta-card">
+        <img src="{{ url_for('static', filename='images/meta-logo.png') }}" class="meta-logo-full">
+      </div>
+      <div class="meta-name-wrapper"><span class="meta-label">Meta Platforms</span></div>
+    </div>
+
+    <div class="tesla-card-container">
+      <div class="tesla-card">
+        <img src="{{ url_for('static', filename='images/tesla-logo.png') }}" class="tesla-logo-full">
+      </div>
+      <div class="tesla-name-wrapper"><span class="tesla-label">Tesla Inc.</span></div>
+    </div>
+
+    <div class="berkshire-card-container">
+      <div class="berkshire-card">
+        <img src="{{ url_for('static', filename='images/berkshire-logo.png') }}" class="berkshire-logo-full">
+      </div>
+      <div class="berkshire-name-wrapper"><span class="berkshire-label">Berkshire Hathaway</span></div>
+    </div>
+
+    <div class="jpm-card-container">
+      <div class="jpm-card">
+        <img src="{{ url_for('static', filename='images/jpmorgan-logo.png') }}" class="jpm-logo-full">
+      </div>
+      <div class="jpm-name-wrapper"><span class="jpm-label">JPMorgan Chase</span></div>
     </div>
 
   </div>
 </div>
 
-<!-- Overlay -->
+<!-- ================= MODAL OVERLAY ================= -->
 <div class="modal-overlay" id="modalOverlay"></div>
 
-<!-- ================= STOCK MODALS (REQUIRED) ================= -->
+<!-- ================= STOCK MODALS ================= -->
 
+<!-- NVIDIA -->
 <div class="stock-details modal" id="nvdaDetails">
   <button class="close-btn">X</button>
   <button class="fullscreen-btn"><i class="fas fa-expand"></i></button>
   <button class="fav-btn"><i class="fas fa-heart"></i></button>
-  <h2>NVIDIA Corporation (NVDA)</h2>
-  <p class="stock-price">Current Price: <strong id="livePriceNvidia">$0.00</strong></p>
-  <div class="chart-container"><canvas id="stockChartNvidia"></canvas></div>
-  <div id="chart-data-nvidia" data-dates='{{ dates|safe }}' data-prices='{{ prices|safe }}'></div>
+
+  <!-- 🔹 NEW HEADER (LOGO + DESCRIPTION) -->
+  <div class="stock-header">
+    <img src="{{ url_for('static', filename='images/NVIDIA-logo-BL.jpg') }}"
+         class="stock-logo-modal">
+
+    <div class="stock-header-text">
+      <h2>NVIDIA (NVDA)</h2>
+      <p class="stock-desc">
+        NVIDIA designs powerful graphics cards used in gaming and computers.
+        It is also a global leader in artificial intelligence and data-center chips.
+      </p>
+    </div>
+  </div>
+
+  <!-- 🔹 OLD CONTENT KEPT -->
+  <p class="stock-price">
+    Current Price: <strong id="livePriceNvidia">$0.00</strong>
+  </p>
+
+  <div class="chart-container">
+    <canvas id="stockChartNvidia"></canvas>
+  </div>
+
+  <div id="chart-data-nvidia"
+       data-dates='{{ dates }}'
+       data-prices='{{ prices }}'>
+  </div>
 </div>
 
+<!-- MICROSOFT -->
 <div class="stock-details modal" id="msftDetails">
   <button class="close-btn">X</button>
   <button class="fullscreen-btn"><i class="fas fa-expand"></i></button>
   <button class="fav-btn"><i class="fas fa-heart"></i></button>
-  <h2>Microsoft Corporation (MSFT)</h2>
-  <p class="stock-price">Current Price: <strong id="livePriceMS">$0.00</strong></p>
-  <div class="chart-container"><canvas id="stockChartMS"></canvas></div>
-  <div id="chart-data-ms" data-dates='{{ dates_ms|safe }}' data-prices='{{ prices_ms|safe }}'></div>
+
+  <div class="stock-header">
+    <img src="{{ url_for('static', filename='images/microsoft-logo.png') }}"
+         class="stock-logo-modal">
+
+    <div class="stock-header-text">
+      <h2>Microsoft (MSFT)</h2>
+      <p class="stock-desc">
+        Microsoft builds Windows, Office, and cloud services.
+        It powers businesses, computers, and cloud platforms worldwide.
+      </p>
+    </div>
+  </div>
+
+  <p class="stock-price">
+    Current Price: <strong id="livePriceMS">$0.00</strong>
+  </p>
+
+  <div class="chart-container">
+    <canvas id="stockChartMS"></canvas>
+  </div>
+
+  <div id="chart-data-ms"
+       data-dates='{{ dates_ms }}'
+       data-prices='{{ prices_ms }}'>
+  </div>
 </div>
 
+
+<!-- APPLE -->
 <div class="stock-details modal" id="aaplDetails">
   <button class="close-btn">X</button>
   <button class="fullscreen-btn"><i class="fas fa-expand"></i></button>
   <button class="fav-btn"><i class="fas fa-heart"></i></button>
-  <h2>Apple Inc. (AAPL)</h2>
-  <p class="stock-price">Current Price: <strong id="livePriceApple">$0.00</strong></p>
-  <div class="chart-container"><canvas id="stockChartApple"></canvas></div>
-  <div id="chart-data-apple" data-dates='{{ dates_apple|safe }}' data-prices='{{ prices_apple|safe }}'></div>
+
+  <div class="stock-header">
+    <img src="{{ url_for('static', filename='images/apple-logo.jpg') }}"
+         class="stock-logo-modal">
+
+    <div class="stock-header-text">
+      <h2>Apple (AAPL)</h2>
+      <p class="stock-desc">
+        Apple designs iPhones, MacBooks, and premium devices.
+        It is known for high-quality products and a strong ecosystem.
+      </p>
+    </div>
+  </div>
+
+  <p class="stock-price">
+    Current Price: <strong id="livePriceApple">$0.00</strong>
+  </p>
+
+  <div class="chart-container">
+    <canvas id="stockChartApple"></canvas>
+  </div>
+
+  <div id="chart-data-apple"
+       data-dates='{{ dates_apple }}'
+       data-prices='{{ prices_apple }}'>
+  </div>
 </div>
 
+
+<!-- AMAZON -->
 <div class="stock-details modal" id="amznDetails">
   <button class="close-btn">X</button>
   <button class="fullscreen-btn"><i class="fas fa-expand"></i></button>
   <button class="fav-btn"><i class="fas fa-heart"></i></button>
-  <h2>Amazon.com Inc. (AMZN)</h2>
-  <p class="stock-price">Current Price: <strong id="livePriceAMZN">$0.00</strong></p>
-  <div class="chart-container"><canvas id="stockChartAMZN"></canvas></div>
-  <div id="chart-data-amzn" data-dates='{{ dates_amzn|safe }}' data-prices='{{ prices_amzn|safe }}'></div>
+
+  <div class="stock-header">
+    <img src="{{ url_for('static', filename='images/amazon-logo.png') }}"
+         class="stock-logo-modal">
+
+    <div class="stock-header-text">
+      <h2>Amazon (AMZN)</h2>
+      <p class="stock-desc">
+        Amazon is the world’s largest online shopping company.
+        It also runs AWS, one of the biggest cloud platforms.
+      </p>
+    </div>
+  </div>
+
+  <p class="stock-price">
+    Current Price: <strong id="livePriceAMZN">$0.00</strong>
+  </p>
+
+  <div class="chart-container">
+    <canvas id="stockChartAMZN"></canvas>
+  </div>
+
+  <div id="chart-data-amzn"
+       data-dates='{{ dates_amzn }}'
+       data-prices='{{ prices_amzn }}'>
+  </div>
 </div>
 
+
+<!-- GOOGLE -->
 <div class="stock-details modal" id="googDetails">
   <button class="close-btn">X</button>
   <button class="fullscreen-btn"><i class="fas fa-expand"></i></button>
   <button class="fav-btn"><i class="fas fa-heart"></i></button>
-  <h2>Alphabet Inc. (GOOGL)</h2>
-  <p class="stock-price">Current Price: <strong id="livePriceGoogle">$0.00</strong></p>
-  <div class="chart-container"><canvas id="stockChartGOOG"></canvas></div>
-  <div id="chart-data-goog" data-dates='{{ dates_goog|safe }}' data-prices='{{ prices_goog|safe }}'></div>
+
+  <div class="stock-header">
+    <img src="{{ url_for('static', filename='images/google-logo.png') }}"
+         class="stock-logo-modal">
+
+    <div class="stock-header-text">
+      <h2>Alphabet (GOOGL)</h2>
+      <p class="stock-desc">
+        Google runs the most popular search engine in the world.
+        It also owns YouTube, Android, and many AI services.
+      </p>
+    </div>
+  </div>
+
+  <p class="stock-price">
+    Current Price: <strong id="livePriceGoogle">$0.00</strong>
+  </p>
+
+  <div class="chart-container">
+    <canvas id="stockChartGOOG"></canvas>
+  </div>
+
+  <div id="chart-data-goog"
+       data-dates='{{ dates_goog }}'
+       data-prices='{{ prices_goog }}'>
+  </div>
 </div>
 
-<!-- Scripts -->
+
+<!-- VISA -->
+<div class="stock-details modal" id="visaDetails">
+  <button class="close-btn">X</button>
+  <button class="fullscreen-btn"><i class="fas fa-expand"></i></button>
+  <button class="fav-btn"><i class="fas fa-heart"></i></button>
+
+  <div class="stock-header">
+    <img src="{{ url_for('static', filename='images/visa-logo.png') }}"
+         class="stock-logo-modal">
+
+    <div class="stock-header-text">
+      <h2>Visa (V)</h2>
+      <p class="stock-desc">
+        Visa operates global digital payment networks.
+        It helps people pay securely using cards and online payments.
+      </p>
+    </div>
+  </div>
+
+  <p class="stock-price">
+    Current Price: <strong id="livePriceVisa">$0.00</strong>
+  </p>
+
+  <div class="chart-container">
+    <canvas id="stockChartVisa"></canvas>
+  </div>
+
+  <div id="chart-data-visa"
+       data-dates='{{ dates_visa }}'
+       data-prices='{{ prices_visa }}'>
+  </div>
+</div>
+
+
+<!-- META -->
+<div class="stock-details modal" id="metaDetails">
+  <button class="close-btn">X</button>
+  <button class="fullscreen-btn"><i class="fas fa-expand"></i></button>
+  <button class="fav-btn"><i class="fas fa-heart"></i></button>
+
+  <div class="stock-header">
+    <img src="{{ url_for('static', filename='images/meta-logo.png') }}"
+         class="stock-logo-modal">
+
+    <div class="stock-header-text">
+      <h2>Meta (META)</h2>
+      <p class="stock-desc">
+        Meta owns Facebook, Instagram, and WhatsApp.
+        It focuses on social media, AI, and virtual reality.
+      </p>
+    </div>
+  </div>
+
+  <p class="stock-price">
+    Current Price: <strong id="livePriceMeta">$0.00</strong>
+  </p>
+
+  <div class="chart-container">
+    <canvas id="stockChartMeta"></canvas>
+  </div>
+
+  <div id="chart-data-meta"
+       data-dates='{{ dates_meta }}'
+       data-prices='{{ prices_meta }}'>
+  </div>
+</div>
+
+
+<!-- TESLA -->
+<div class="stock-details modal" id="tslaDetails">
+  <button class="close-btn">X</button>
+  <button class="fullscreen-btn"><i class="fas fa-expand"></i></button>
+  <button class="fav-btn"><i class="fas fa-heart"></i></button>
+
+  <div class="stock-header">
+    <img src="{{ url_for('static', filename='images/tesla-logo.png') }}"
+         class="stock-logo-modal">
+
+    <div class="stock-header-text">
+      <h2>Tesla (TSLA)</h2>
+      <p class="stock-desc">
+        Tesla builds electric vehicles and clean energy products.
+        It also develops self-driving and battery technology.
+      </p>
+    </div>
+  </div>
+
+  <p class="stock-price">
+    Current Price: <strong id="livePriceTesla">$0.00</strong>
+  </p>
+
+  <div class="chart-container">
+    <canvas id="stockChartTesla"></canvas>
+  </div>
+
+  <div id="chart-data-tesla"
+       data-dates='{{ dates_tsla }}'
+       data-prices='{{ prices_tsla }}'>
+  </div>
+</div>
+
+
+<!-- BERKSHIRE -->
+<div class="stock-details modal" id="brkDetails">
+  <button class="close-btn">X</button>
+  <button class="fullscreen-btn"><i class="fas fa-expand"></i></button>
+  <button class="fav-btn"><i class="fas fa-heart"></i></button>
+
+  <div class="stock-header">
+    <img src="{{ url_for('static', filename='images/berkshire-logo.png') }}"
+         class="stock-logo-modal">
+
+    <div class="stock-header-text">
+      <h2>Berkshire Hathaway (BRK-B)</h2>
+      <p class="stock-desc">
+        Berkshire Hathaway owns many major companies.
+        It is led by legendary investor Warren Buffett.
+      </p>
+    </div>
+  </div>
+
+  <p class="stock-price">
+    Current Price: <strong id="livePriceBRK">$0.00</strong>
+  </p>
+
+  <div class="chart-container">
+    <canvas id="stockChartBRK"></canvas>
+  </div>
+
+  <div id="chart-data-brk"
+       data-dates='{{ dates_brk }}'
+       data-prices='{{ prices_brk }}'>
+  </div>
+</div>
+
+<!-- JPM -->
+<div class="stock-details modal" id="jpmDetails">
+  <button class="close-btn">X</button>
+  <button class="fullscreen-btn"><i class="fas fa-expand"></i></button>
+  <button class="fav-btn"><i class="fas fa-heart"></i></button>
+
+  <div class="stock-header">
+    <img src="{{ url_for('static', filename='images/jpmorgan-logo.png') }}"
+         class="stock-logo-modal">
+
+    <div class="stock-header-text">
+      <h2>JPMorgan Chase (JPM)</h2>
+      <p class="stock-desc">
+        JPMorgan is one of the largest banks in the world.
+        It provides banking, investment, and financial services.
+      </p>
+    </div>
+  </div>
+
+  <p class="stock-price">
+    Current Price: <strong id="livePriceJPM">$0.00</strong>
+  </p>
+
+  <div class="chart-container">
+    <canvas id="stockChartJPM"></canvas>
+  </div>
+
+  <div id="chart-data-jpm"
+       data-dates='{{ dates_jpm }}'
+       data-prices='{{ prices_jpm }}'>
+  </div>
+</div>
+
+<!-- ================= SCRIPTS ================= -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 
