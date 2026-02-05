@@ -1,4 +1,4 @@
-// ===== Make toggleDropdown global =====
+/* ===== Make toggleDropdown global ===== */
 function toggleDropdown() {
   const dropdown = document.getElementById("profileDropdown");
   dropdown.classList.toggle("show");
@@ -9,16 +9,16 @@ document.addEventListener("DOMContentLoaded", () => {
   // ==========================
   // PROFILE DROPDOWN
   // ==========================
-  const userProfile = document.querySelector('.user-profile');
+  const userProfile = document.querySelector(".user-profile");
   if (userProfile) {
-    userProfile.addEventListener('click', (event) => {
+    userProfile.addEventListener("click", (event) => {
       toggleDropdown();
       event.stopPropagation();
     });
   }
 
-  window.addEventListener("click", function (event) {
-    if (!event.target.closest('.user-profile')) {
+  window.addEventListener("click", (event) => {
+    if (!event.target.closest(".user-profile")) {
       const d = document.getElementById("profileDropdown");
       if (d) d.classList.remove("show");
     }
@@ -27,16 +27,18 @@ document.addEventListener("DOMContentLoaded", () => {
   // ==========================
   // SIDEBAR TOGGLE
   // ==========================
-  const sidebarToggle = document.querySelector('.sidebar-toggle');
-  const sidebarCheckbox = document.getElementById('sidebarCheckbox');
+  const sidebarToggle = document.querySelector(".sidebar-toggle");
+  const sidebarCheckbox = document.getElementById("sidebarCheckbox");
 
   function updateSidebarLabel() {
     if (!sidebarToggle || !sidebarCheckbox) return;
     sidebarToggle.title = sidebarCheckbox.checked ? "Close Sidebar" : "Open Sidebar";
-    sidebarToggle.setAttribute('aria-label', sidebarToggle.title);
+    sidebarToggle.setAttribute("aria-label", sidebarToggle.title);
   }
   updateSidebarLabel();
-  if (sidebarCheckbox) sidebarCheckbox.addEventListener('change', updateSidebarLabel);
+  if (sidebarCheckbox) {
+    sidebarCheckbox.addEventListener("change", updateSidebarLabel);
+  }
 
   // ==========================
   // STOCK CARD CONFIG
@@ -58,6 +60,8 @@ document.addEventListener("DOMContentLoaded", () => {
   stocks.forEach(stock => {
     const card = document.querySelector(`.${stock.cardClass}`);
     const modal = document.getElementById(stock.modalId);
+    if (!modal) return;
+
     const closeBtn = modal.querySelector(".close-btn");
     const favBtn = modal.querySelector(".fav-btn");
     const fullscreenBtn = modal.querySelector(".fullscreen-btn");
@@ -75,7 +79,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     // ==========================
-    // RENDER CHART (FINAL)
+    // RENDER CHART
     // ==========================
     function renderChart() {
       const st = stockObjects[stock.modalId];
@@ -112,7 +116,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ==========================
-    // OPEN MODAL (STABLE)
+    // OPEN MODAL
     // ==========================
     function openModal() {
       modal.classList.add("show");
@@ -120,12 +124,10 @@ document.addEventListener("DOMContentLoaded", () => {
       modalOverlay.style.pointerEvents = "auto";
 
       setTimeout(() => {
-        modal.offsetHeight; // force reflow
-
+        modal.offsetHeight;
         if (!stockObjects[stock.modalId].chart) {
           renderChart();
         }
-
         const ch = stockObjects[stock.modalId].chart;
         if (ch) {
           ch.resize();
@@ -148,7 +150,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (favBtn) favBtn.addEventListener("click", () => favBtn.classList.toggle("active"));
 
     // ==========================
-    // FULLSCREEN TOGGLE (SAFE)
+    // FULLSCREEN TOGGLE
     // ==========================
     if (fullscreenBtn) {
       fullscreenBtn.addEventListener("click", () => {
@@ -171,16 +173,13 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ==========================
-  // FULLSCREEN EXIT FIX (CRITICAL)
+  // FULLSCREEN EXIT FIX
   // ==========================
   document.addEventListener("fullscreenchange", () => {
     if (!document.fullscreenElement) {
-
-      // Force full page reflow
       document.body.style.display = "none";
       document.body.offsetHeight;
       document.body.style.display = "";
-
       window.scrollTo(0, 0);
 
       Object.values(stockObjects).forEach(obj => {
@@ -234,6 +233,8 @@ document.addEventListener("DOMContentLoaded", () => {
   setInterval(fetchLiveData, 10000);
 
 });
+
+
 
 
 

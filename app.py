@@ -5,7 +5,7 @@ import json
 app = Flask(__name__)
 
 # ✅ EODHD API KEY
-API_KEY = " 695fe52a6c9e43.43659319"
+API_KEY = "69822f3295ab04.85754315"
 
 # Stock symbols
 SYMBOL_NVDA = "NVDA"
@@ -14,9 +14,11 @@ SYMBOL_AAPL = "AAPL"
 SYMBOL_AMZN = "AMZN"
 SYMBOL_GOOG = "GOOG"
 
+
 @app.route("/")
 def home():
     return redirect(url_for("login"))
+
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -24,6 +26,7 @@ def login():
         username = request.form["username"]
         return redirect(url_for("dashboard", username=username))
     return render_template("index.html")
+
 
 @app.route("/dashboard/<username>")
 def dashboard(username):
@@ -103,6 +106,7 @@ def dashboard(username):
         prices_goog=json.dumps(prices_goog)
     )
 
+
 # API endpoint for real-time JS updates every 10 sec
 @app.route("/stock_data/<symbol>")
 def stock_data(symbol):
@@ -118,6 +122,6 @@ def stock_data(symbol):
         "timestamp": data.get("timestamp")
     })
 
+
 if __name__ == "__main__":
     app.run(debug=True)
-

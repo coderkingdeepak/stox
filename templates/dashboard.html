@@ -4,206 +4,147 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Stock IQ Tracker</title>
+
   <!-- Icons -->
   <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
   <!-- CSS -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
 </head>
+
 <body class="dashboard-body">
-  <!-- Sidebar -->
-  <input type="checkbox" id="sidebarCheckbox" checked>
-  <div class="sidebar" id="sidebar">
-    <label for="sidebarCheckbox" class="sidebar-toggle" title="Toggle Sidebar" aria-label="Toggle Sidebar">
-      <i class="bx bx-sidebar"></i>
-    </label>
-    <div class="sidebar-menu">
-      <div class="menu-item"><i class="fas fa-home"></i> Home</div>
-      <div class="menu-item"><i class="fas fa-lightbulb"></i> What is Stock?</div>
-      <div class="menu-item"><i class="fas fa-chart-line"></i> Top 10 Stocks</div>
-      <div class="menu-item"><i class="fas fa-newspaper"></i> Latest News</div>
-      <div class="menu-item"><i class="fas fa-star"></i> Your Watchlist</div>
-      <div class="menu-item"><i class="fas fa-code-compare"></i> Compare Stocks</div>
-      <div class="menu-item"><i class="fas fa-shopping-cart"></i> Invest Now</div>
-      <div class="menu-item"><i class="fas fa-bell"></i> Notifications</div>
-      <div class="menu-item"><i class="fas fa-history"></i> History</div>
-    </div>
-    <!-- User profile -->
-    <div class="user-profile">
-      <img src="{{ url_for('static', filename='images/stocks.png') }}" alt="Profile" class="profile-img">
-      <div class="profile-info">
-        <span class="username">{{ username }}</span>
-        <span class="email">user@email.com</span>
-      </div>
-      <div class="profile-dropdown" id="profileDropdown">
-        <div class="dropdown-item"><i class="fas fa-circle-question dropdown-icon"></i> Help</div>
-        <div class="dropdown-item"><i class="fas fa-comment-dots dropdown-icon"></i> Send Feedback</div>
-        <div class="dropdown-item"><i class="fas fa-cog dropdown-icon"></i> Settings</div>
-        <div class="dropdown-item"><i class="fas fa-sign-out-alt dropdown-icon"></i> Logout</div>
-      </div>
-    </div>
+
+<!-- Sidebar -->
+<input type="checkbox" id="sidebarCheckbox" checked>
+<div class="sidebar" id="sidebar">
+
+  <label for="sidebarCheckbox" class="sidebar-toggle" title="Toggle Sidebar" aria-label="Toggle Sidebar">
+    <i class="bx bx-sidebar"></i>
+  </label>
+
+  <div class="sidebar-menu">
+    <div class="menu-item"><i class="fas fa-home"></i> Home</div>
+    <div class="menu-item"><i class="fas fa-lightbulb"></i> What is Stock?</div>
+    <div class="menu-item"><i class="fas fa-chart-line"></i> Top 10 Stocks</div>
+    <div class="menu-item"><i class="fas fa-newspaper"></i> Latest News</div>
+    <div class="menu-item"><i class="fas fa-star"></i> Your Watchlist</div>
+    <div class="menu-item"><i class="fas fa-code-compare"></i> Compare Stocks</div>
+    <div class="menu-item"><i class="fas fa-shopping-cart"></i> Invest Now</div>
+    <div class="menu-item"><i class="fas fa-bell"></i> Notifications</div>
+    <div class="menu-item"><i class="fas fa-history"></i> History</div>
   </div>
 
-  <!-- Main content -->
-  <div class="main-content" id="mainContent">
-    <div class="content-area">
-      <h1>Welcome to Stock Dashboard</h1>
-      <!-- Stock Card Wrapper -->
-      <div class="stock-card-wrapper">
-        <!-- NVIDIA Card -->
-        <div class="nvidia-card-container">
-          <div class="nvidia-card" data-symbol="NVDA">
-            <img src="{{ url_for('static', filename='images/NVIDIA-logo-BL.jpg') }}" alt="NVIDIA Logo" class="nvidia-logo-full">
-          </div>
-          <div class="nvidia-name-wrapper">
-            <span class="nvidia-label">NVIDIA Corporation</span>
-          </div>
-        </div>
+  <!-- User profile -->
+  <div class="user-profile">
+    <img src="{{ url_for('static', filename='images/stocks.png') }}" class="profile-img">
+    <div class="profile-info">
+      <span class="username">{{ username }}</span>
+      <span class="email">user@email.com</span>
+    </div>
 
-        <!-- Microsoft Card -->
-        <div class="microsoft-card-container">
-          <div class="microsoft-card" data-symbol="MSFT">
-            <img src="{{ url_for('static', filename='images/microsoft logo.png') }}" alt="Microsoft Logo" class="microsoft-logo-full">
-          </div>
-          <div class="microsoft-name-wrapper">
-            <span class="microsoft-label">Microsoft Corporation</span>
-          </div>
-        </div>
-
-        <!-- Apple Card -->
-        <div class="apple-card-container">
-          <div class="apple-card" data-symbol="AAPL">
-            <img src="{{ url_for('static', filename='images/apple-logo.jpg') }}" alt="Apple Logo" class="apple-logo-full">
-          </div>
-          <div class="apple-name-wrapper">
-            <span class="apple-label">Apple Inc.</span>
-          </div>
-        </div>
-
-        <!-- Amazon Card -->
-        <div class="amazon-card-container">
-          <div class="amazon-card" data-symbol="AMZN">
-            <img src="{{ url_for('static', filename='images/amazon-logo.png') }}" alt="Amazon Logo" class="amazon-logo-full">
-          </div>
-          <div class="amazon-name-wrapper">
-            <span class="amazon-label">Amazon.com Inc.</span>
-          </div>
-        </div>
-
-        <!-- Google Card -->
-        <div class="google-card-container">
-          <div class="google-card" data-symbol="GOOGL">
-            <img src="{{ url_for('static', filename='images/google-logo.png') }}" alt="Google Logo" class="google-logo-full">
-          </div>
-          <div class="google-name-wrapper">
-            <span class="google-label">Alphabet Inc.</span>
-          </div>
-        </div>
-      </div>
+    <div class="profile-dropdown" id="profileDropdown">
+      <div class="dropdown-item"><i class="fas fa-circle-question"></i> Help</div>
+      <div class="dropdown-item"><i class="fas fa-comment-dots"></i> Send Feedback</div>
+      <div class="dropdown-item"><i class="fas fa-cog"></i> Settings</div>
+      <div class="dropdown-item"><i class="fas fa-sign-out-alt"></i> Logout</div>
     </div>
   </div>
+</div>
 
-  <!-- Modal Overlay -->
-  <div class="modal-overlay" id="modalOverlay"></div>
+<!-- Main content -->
+<div class="main-content">
+  <h1>Welcome to Stock Dashboard</h1>
 
-  <!-- NVIDIA Stock Modal -->
-  <div class="stock-details modal" id="nvdaDetails" data-symbol="NVDA">
-    <button class="fav-btn"><i class="fas fa-heart"></i></button>
-    <button class="fullscreen-btn"><i class="fas fa-expand"></i></button>
-    <button class="close-btn">X</button>
-    <div class="stock-header">
-      <img src="{{ url_for('static', filename='images/NVIDIA-logo-BL.jpg') }}" alt="NVIDIA Logo" class="nvidia-logo-modal">
-      <h2>NVIDIA Corporation (NVDA)</h2>
-      <p class="stock-description">NVIDIA Corporation is a leading technology company known for its GPUs, AI computing, and visual computing innovations.</p>
-      <p class="stock-price">Current Price: <strong id="livePriceNvidia">${{ price }}</strong></p>
+  <div class="stock-card-wrapper">
+
+    <div class="nvidia-card-container">
+      <div class="nvidia-card"><img src="{{ url_for('static', filename='images/NVIDIA-logo-BL.jpg') }}" class="nvidia-logo-full"></div>
+      <div class="nvidia-name-wrapper"><span class="nvidia-label">NVIDIA Corporation</span></div>
     </div>
-    <div class="stock-body">
-      <div class="chart-container">
-        <canvas id="stockChartNvidia"></canvas>
-      </div>
-      <div id="chart-data-nvidia" data-dates='{{ dates|safe }}' data-prices='{{ prices|safe }}' data-symbol='NVDA'></div>
+
+    <div class="microsoft-card-container">
+      <div class="microsoft-card"><img src="{{ url_for('static', filename='images/microsoft logo.png') }}" class="microsoft-logo-full"></div>
+      <div class="microsoft-name-wrapper"><span class="microsoft-label">Microsoft Corporation</span></div>
     </div>
+
+    <div class="apple-card-container">
+      <div class="apple-card"><img src="{{ url_for('static', filename='images/apple-logo.jpg') }}" class="apple-logo-full"></div>
+      <div class="apple-name-wrapper"><span class="apple-label">Apple Inc.</span></div>
+    </div>
+
+    <div class="amazon-card-container">
+      <div class="amazon-card"><img src="{{ url_for('static', filename='images/amazon-logo.png') }}" class="amazon-logo-full"></div>
+      <div class="amazon-name-wrapper"><span class="amazon-label">Amazon.com Inc.</span></div>
+    </div>
+
+    <div class="google-card-container">
+      <div class="google-card"><img src="{{ url_for('static', filename='images/google-logo.png') }}" class="google-logo-full"></div>
+      <div class="google-name-wrapper"><span class="google-label">Alphabet Inc.</span></div>
+    </div>
+
   </div>
+</div>
 
-  <!-- Microsoft Stock Modal -->
-  <div class="stock-details modal" id="msftDetails" data-symbol="MSFT">
-    <button class="fav-btn"><i class="fas fa-heart"></i></button>
-    <button class="fullscreen-btn"><i class="fas fa-expand"></i></button>
-    <button class="close-btn">X</button>
-    <div class="stock-header">
-      <img src="{{ url_for('static', filename='images/microsoft logo.png') }}" alt="Microsoft Logo" class="microsoft-logo-modal">
-      <h2>Microsoft Corporation (MSFT)</h2>
-      <p class="stock-description">Microsoft Corporation develops, licenses, and supports software, services, devices, and solutions worldwide.</p>
-      <p class="stock-price">Current Price: <strong id="livePriceMS">${{ price_ms }}</strong></p>
-    </div>
-    <div class="stock-body">
-      <div class="chart-container">
-        <canvas id="stockChartMS"></canvas>
-      </div>
-      <div id="chart-data-ms" data-dates='{{ dates_ms|safe }}' data-prices='{{ prices_ms|safe }}' data-symbol='MSFT'></div>
-    </div>
-  </div>
+<!-- Overlay -->
+<div class="modal-overlay" id="modalOverlay"></div>
 
-  <!-- Apple Stock Modal -->
-  <div class="stock-details modal" id="aaplDetails" data-symbol="AAPL">
-    <button class="fav-btn"><i class="fas fa-heart"></i></button>
-    <button class="fullscreen-btn"><i class="fas fa-expand"></i></button>
-    <button class="close-btn">X</button>
-    <div class="stock-header">
-      <img src="{{ url_for('static', filename='images/apple-logo.jpg') }}" alt="Apple Logo" class="apple-logo-modal">
-      <h2>Apple Inc. (AAPL)</h2>
-      <p class="stock-description">Apple Inc. designs, manufactures, and markets smartphones, personal computers, tablets, wearables, and accessories worldwide.</p>
-      <p class="stock-price">Current Price: <strong id="livePriceApple">${{ price_apple }}</strong></p>
-    </div>
-    <div class="stock-body">
-      <div class="chart-container">
-        <canvas id="stockChartApple"></canvas>
-      </div>
-      <div id="chart-data-apple" data-dates='{{ dates_apple|safe }}' data-prices='{{ prices_apple|safe }}' data-symbol='AAPL'></div>
-    </div>
-  </div>
+<!-- ================= STOCK MODALS (REQUIRED) ================= -->
 
-  <!-- Amazon Stock Modal -->
-  <div class="stock-details modal" id="amznDetails" data-symbol="AMZN">
-    <button class="fav-btn"><i class="fas fa-heart"></i></button>
-    <button class="fullscreen-btn"><i class="fas fa-expand"></i></button>
-    <button class="close-btn">X</button>
-    <div class="stock-header">
-      <img src="{{ url_for('static', filename='images/amazon-logo.png') }}" alt="Amazon Logo" class="amazon-logo-modal">
-      <h2>Amazon.com Inc. (AMZN)</h2>
-      <p class="stock-description">Amazon.com Inc. is a global e-commerce, cloud computing, and AI leader.</p>
-      <p class="stock-price">Current Price: <strong id="livePriceAMZN">${{ price_amzn }}</strong></p>
-    </div>
-    <div class="stock-body">
-      <div class="chart-container">
-        <canvas id="stockChartAMZN"></canvas>
-      </div>
-      <div id="chart-data-amzn" data-dates='{{ dates_amzn|safe }}' data-prices='{{ prices_amzn|safe }}' data-symbol='AMZN'></div>
-    </div>
-  </div>
+<div class="stock-details modal" id="nvdaDetails">
+  <button class="close-btn">X</button>
+  <button class="fullscreen-btn"><i class="fas fa-expand"></i></button>
+  <button class="fav-btn"><i class="fas fa-heart"></i></button>
+  <h2>NVIDIA Corporation (NVDA)</h2>
+  <p class="stock-price">Current Price: <strong id="livePriceNvidia">$0.00</strong></p>
+  <div class="chart-container"><canvas id="stockChartNvidia"></canvas></div>
+  <div id="chart-data-nvidia" data-dates='{{ dates|safe }}' data-prices='{{ prices|safe }}'></div>
+</div>
 
-  <!-- Google Stock Modal -->
-  <div class="stock-details modal" id="googDetails" data-symbol="GOOGL">
-    <button class="fav-btn"><i class="fas fa-heart"></i></button>
-    <button class="fullscreen-btn"><i class="fas fa-expand"></i></button>
-    <button class="close-btn">X</button>
-    <div class="stock-header">
-      <img src="{{ url_for('static', filename='images/google-logo.png') }}" alt="Google Logo" class="google-logo-modal">
-      <h2>Alphabet Inc. (GOOGL)</h2>
-      <p class="stock-description">Alphabet Inc. is the parent company of Google and a global technology leader.</p>
-      <p class="stock-price">Current Price: <strong id="livePriceGoogle">${{ price_goog }}</strong></p>
-    </div>
-    <div class="stock-body">
-      <div class="chart-container">
-        <canvas id="stockChartGOOG"></canvas>
-      </div>
-      <div id="chart-data-goog" data-dates='{{ dates_goog|safe }}' data-prices='{{ prices_goog|safe }}' data-symbol='GOOGL'></div>
-    </div>
-  </div>
+<div class="stock-details modal" id="msftDetails">
+  <button class="close-btn">X</button>
+  <button class="fullscreen-btn"><i class="fas fa-expand"></i></button>
+  <button class="fav-btn"><i class="fas fa-heart"></i></button>
+  <h2>Microsoft Corporation (MSFT)</h2>
+  <p class="stock-price">Current Price: <strong id="livePriceMS">$0.00</strong></p>
+  <div class="chart-container"><canvas id="stockChartMS"></canvas></div>
+  <div id="chart-data-ms" data-dates='{{ dates_ms|safe }}' data-prices='{{ prices_ms|safe }}'></div>
+</div>
 
-  <!-- Scripts -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<div class="stock-details modal" id="aaplDetails">
+  <button class="close-btn">X</button>
+  <button class="fullscreen-btn"><i class="fas fa-expand"></i></button>
+  <button class="fav-btn"><i class="fas fa-heart"></i></button>
+  <h2>Apple Inc. (AAPL)</h2>
+  <p class="stock-price">Current Price: <strong id="livePriceApple">$0.00</strong></p>
+  <div class="chart-container"><canvas id="stockChartApple"></canvas></div>
+  <div id="chart-data-apple" data-dates='{{ dates_apple|safe }}' data-prices='{{ prices_apple|safe }}'></div>
+</div>
+
+<div class="stock-details modal" id="amznDetails">
+  <button class="close-btn">X</button>
+  <button class="fullscreen-btn"><i class="fas fa-expand"></i></button>
+  <button class="fav-btn"><i class="fas fa-heart"></i></button>
+  <h2>Amazon.com Inc. (AMZN)</h2>
+  <p class="stock-price">Current Price: <strong id="livePriceAMZN">$0.00</strong></p>
+  <div class="chart-container"><canvas id="stockChartAMZN"></canvas></div>
+  <div id="chart-data-amzn" data-dates='{{ dates_amzn|safe }}' data-prices='{{ prices_amzn|safe }}'></div>
+</div>
+
+<div class="stock-details modal" id="googDetails">
+  <button class="close-btn">X</button>
+  <button class="fullscreen-btn"><i class="fas fa-expand"></i></button>
+  <button class="fav-btn"><i class="fas fa-heart"></i></button>
+  <h2>Alphabet Inc. (GOOGL)</h2>
+  <p class="stock-price">Current Price: <strong id="livePriceGoogle">$0.00</strong></p>
+  <div class="chart-container"><canvas id="stockChartGOOG"></canvas></div>
+  <div id="chart-data-goog" data-dates='{{ dates_goog|safe }}' data-prices='{{ prices_goog|safe }}'></div>
+</div>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+
 </body>
 </html>
 
