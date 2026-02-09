@@ -5,7 +5,7 @@ import json
 app = Flask(__name__)
 
 # ✅ EODHD API KEY
-API_KEY = "698475278e7a48.32103149"
+API_KEY = "69873c3b8b18f1.56302887"
 
 # ===== STOCK SYMBOLS =====
 SYMBOL_NVDA = "NVDA"

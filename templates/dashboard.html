@@ -483,30 +483,34 @@
   <span>STOX</span>
 </div>
 
-
-<!-- STOX Sidebar Panel -->
+<!-- STOX SIDEBAR PANEL -->
 <div id="stox-panel">
+
   <div class="stox-header">
-  <div id="stox-header-logo"></div>
-  <button id="stox-close">✕</button>
-</div>
+    <div id="stox-header-logo"></div>
+    <button id="stox-close">✕</button>
+  </div>
 
   <div class="stox-body">
-    <!-- Chat messages will appear here later -->
-    <div class="stox-placeholder">
-      Ask STOX about stocks, markets, or actions…
-    </div>
+    <div class="stox-messages" id="stox-messages"></div>
   </div>
 
   <div class="stox-input-area">
     <input
       type="text"
       id="stox-input"
-      placeholder="Type or say 'Stox' to begin..."
+      placeholder="Type or tap mic to speak…"
     />
+
+    <button id="stox-mic" class="stox-mic-btn">
+      <img src="/static/images/mic.png" alt="Mic" />
+    </button>
+
     <button id="stox-send">➤</button>
   </div>
+
 </div>
+
 
 <!-- ================= SCRIPTS ================= -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
