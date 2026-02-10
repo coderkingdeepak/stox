@@ -756,3 +756,60 @@
   filter: drop-shadow(0 0 6px #00ff99);
   transform: scale(1.15);
 }
+/* =========================
+   STOX VOICE TOGGLE
+========================= */
+
+.voice-toggle {
+  position: absolute;
+  left: 16px;
+  top: 16px;
+
+  width: 64px;
+  height: 32px;
+  border-radius: 20px;
+  border: none;
+
+  background: #e0e0e0;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+
+  transition: background 0.25s ease;
+}
+
+/* ON state */
+.voice-toggle.on {
+  background: #2ecc71;
+}
+
+/* Knob */
+.voice-toggle .toggle-knob {
+  width: 26px;
+  height: 26px;
+  background: #ffffff;
+  border-radius: 50%;
+  margin-left: 4px;
+  transition: transform 0.25s ease;
+}
+
+/* Move knob when ON */
+.voice-toggle.on .toggle-knob {
+  transform: translateX(30px);
+}
+
+/* Text */
+.voice-toggle .toggle-text {
+  position: absolute;
+  left: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #ffffff;
+  pointer-events: none;
+}
+
+.voice-toggle:not(.on) .toggle-text {
+  content: "OFF";
+  color: #555;
+}

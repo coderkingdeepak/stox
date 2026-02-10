@@ -297,10 +297,10 @@ function addStoxMessage(text, sender = "stox") {
   const body = stoxMessages.parentElement;
   body.scrollTop = body.scrollHeight;
 
-  // 🔊 STOX SPEAKS
-  if (sender === "stox") {
-    speakStox(text);
-  }
+  if (sender === "stox" && voiceReplyEnabled) {
+  speakStox(text);
+}
+
 }
 
 
@@ -556,6 +556,24 @@ if (msg === "apple" || msg === "aapl") {
     if (e.key === "Enter") sendStoxMessage();
   });
 window.sendStoxMessage = sendStoxMessage;
+/* ==========================
+   STOX VOICE REPLY TOGGLE
+   ========================== */
+
+let voiceReplyEnabled = false; // DEFAULT = OFF
+
+const voiceToggle = document.getElementById("stox-voice-toggle");
+
+if (voiceToggle) {
+  voiceToggle.addEventListener("click", () => {
+    voiceReplyEnabled = !voiceReplyEnabled;
+
+    voiceToggle.classList.toggle("on", voiceReplyEnabled);
+    voiceToggle.querySelector(".toggle-text").textContent =
+      voiceReplyEnabled ? "ON" : "OFF";
+  });
+}
+
 
   console.log("✅ STOX Phase 2.1.1 chat ready");
 });
