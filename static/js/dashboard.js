@@ -185,6 +185,42 @@ document.addEventListener("DOMContentLoaded", () => {
 
   fetchLiveData();
   setInterval(fetchLiveData, 10000);
+    /* =========================
+   STOCK SEARCH FILTER
+========================= */
+
+const searchInput = document.querySelector(".stock-search-input");
+
+if (searchInput) {
+  const stockCards = document.querySelectorAll(
+    ".nvidia-card-container, \
+     .microsoft-card-container, \
+     .apple-card-container, \
+     .amazon-card-container, \
+     .google-card-container, \
+     .visa-card-container, \
+     .meta-card-container, \
+     .tesla-card-container, \
+     .berkshire-card-container, \
+     .jpm-card-container"
+  );
+
+  searchInput.addEventListener("input", () => {
+    const value = searchInput.value.toLowerCase().trim();
+
+    stockCards.forEach(card => {
+      const text = card.innerText.toLowerCase();
+
+      if (text.includes(value)) {
+        card.classList.remove("hidden");
+      } else {
+        card.classList.add("hidden");
+      }
+    });
+  });
+}
+
+
 
   /* ==========================
      STOX PANEL (FIXED & STABLE)
