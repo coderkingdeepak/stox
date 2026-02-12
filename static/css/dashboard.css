@@ -121,6 +121,88 @@
     left: 32px;
   }
 }
+.stock-selected {
+  outline: 2px solid rgba(155, 92, 255, 0.8);
+  outline-offset: 4px;
+  border-radius: 20px;
+  transition: outline 0.2s ease;
+}
+/* =========================
+   KEYBOARD NAVIGATION HIGHLIGHT (CARD ONLY)
+========================= */
+
+.nvidia-card.keyboard-selected,
+.microsoft-card.keyboard-selected,
+.apple-card.keyboard-selected,
+.amazon-card.keyboard-selected,
+.google-card.keyboard-selected,
+.visa-card.keyboard-selected,
+.meta-card.keyboard-selected,
+.tesla-card.keyboard-selected,
+.berkshire-card.keyboard-selected,
+.jpm-card.keyboard-selected {
+
+  transform: scale(1.07);
+
+  box-shadow:
+    0 0 0 3px rgba(155, 92, 255, 0.8),
+    0 14px 30px rgba(0, 0, 0, 0.35);
+
+  transition:
+    transform 0.08s ease-out,
+    box-shadow 0.08s ease-out;
+}
+
+/* =========================
+   SEARCH SUGGESTIONS (PHASE 3.4)
+========================= */
+
+.search-suggestions {
+  position: absolute;
+  top: 58px;
+  left: 0;
+  width: 580px;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.12);
+  overflow: hidden;
+  display: none;
+  z-index: 2000;
+  animation: fadeSlide 0.18s ease;
+}
+
+.suggestion-item {
+  padding: 12px 18px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  justify-content: space-between;
+  transition: background 0.15s ease;
+}
+
+.suggestion-item:hover,
+.suggestion-item.active {
+  background: rgba(155, 92, 255, 0.08);
+}
+
+.suggestion-symbol {
+  opacity: 0.6;
+  font-size: 13px;
+}
+
+@keyframes fadeSlide {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.suggestion-active {
+  background: rgba(155, 92, 255, 0.15);
+}
+.search-active {
+  outline: 2px solid rgba(155, 92, 255, 0.9);
+  box-shadow: 0 0 12px rgba(155, 92, 255, 0.6);
+  transition: all 0.12s ease;
+}
+
 
 
 

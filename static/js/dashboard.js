@@ -1,3 +1,58 @@
+/* ===============================
+   STOX AI DATABASE (PHASE 3.3)
+=============================== */
+
+const STOCK_DATABASE = {
+  nvidia: {
+    name: "NVIDIA",
+    symbol: "NVDA",
+    sector: "Semiconductors / AI",
+    risk: "High volatility due to rapid AI-driven growth.",
+    future: "Strong AI and data center demand could drive long-term growth.",
+    description:
+      "NVIDIA is a global leader in GPUs and artificial intelligence chips. It powers gaming, AI data centers, and autonomous systems."
+  },
+
+  tesla: {
+    name: "Tesla",
+    symbol: "TSLA",
+    sector: "Electric Vehicles / Clean Energy",
+    risk: "High competition and market volatility.",
+    future: "Growth depends on EV adoption and innovation in battery tech.",
+    description:
+      "Tesla designs electric vehicles and clean energy solutions."
+  },
+
+  apple: {
+    name: "Apple",
+    symbol: "AAPL",
+    sector: "Consumer Technology",
+    risk: "Moderate risk due to market saturation.",
+    future: "Steady long-term growth through ecosystem and services.",
+    description:
+      "Apple creates iPhones, Macs, and digital services."
+  }
+};
+
+function getStockKey(message) {
+  message = message.toLowerCase();
+
+  for (const key in STOCK_DATABASE) {
+    const stock = STOCK_DATABASE[key];
+
+    if (
+      message.includes(stock.name.toLowerCase()) ||
+      message.includes(stock.symbol.toLowerCase())
+    ) {
+      return key;
+    }
+  }
+
+  return null;
+}
+
+
+
 /* ===== Make toggleDropdown global ===== */
 function toggleDropdown() {
   const dropdown = document.getElementById("profileDropdown");
@@ -74,6 +129,23 @@ document.addEventListener("DOMContentLoaded", () => {
     const dataEl = document.getElementById(stock.dataId);
     const dates = JSON.parse(dataEl?.dataset.dates || "[]");
     const prices = JSON.parse(dataEl?.dataset.prices || "[]").map(p => parseFloat(p));
+    /* ==========================
+   MAKE STOCK NAMES CLICKABLE
+========================== */
+
+stocks.forEach(stock => {
+  const card = document.querySelector(`.${stock.cardClass}`);
+  const nameWrapper = card?.parentElement?.querySelector("span");
+
+  if (nameWrapper && card) {
+    nameWrapper.style.cursor = "pointer";
+
+    nameWrapper.addEventListener("click", () => {
+      card.click(); // reuse existing logic
+    });
+  }
+});
+
 
     // 🔴 OLD FORMAT RESTORED (IMPORTANT)
     stockObjects[stock.modalId] = {
@@ -123,13 +195,25 @@ document.addEventListener("DOMContentLoaded", () => {
         if (ch) { ch.resize(); ch.update(); }
       }, 300);
     }
+function closeModal() {
+  if (document.fullscreenElement) document.exitFullscreen();
 
-    function closeModal() {
-      if (document.fullscreenElement) document.exitFullscreen();
-      modal.classList.remove("fullscreen-mode", "show");
-      modalOverlay.classList.remove("show");
-      modalOverlay.style.pointerEvents = "none";
-    }
+  modal.classList.remove("fullscreen-mode", "show");
+  modalOverlay.classList.remove("show");
+  modalOverlay.style.pointerEvents = "none";
+
+  // 🔥 Fully reset keyboard state
+  currentIndex = -1;
+
+  document.querySelectorAll(".keyboard-selected")
+    .forEach(el => el.classList.remove("keyboard-selected"));
+
+  // 🔥 Important: Delay focus slightly after animation
+  setTimeout(() => {
+    searchInput.focus();
+  }, 50);
+}
+
 
     card.addEventListener("click", openModal);
     closeBtn?.addEventListener("click", closeModal);
@@ -140,10 +224,26 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   modalOverlay?.addEventListener("click", () => {
-    Object.values(stockObjects).forEach(o => o.modal.classList.remove("show"));
-    modalOverlay.classList.remove("show");
-    modalOverlay.style.pointerEvents = "none";
+
+  Object.values(stockObjects).forEach(o => {
+    o.modal.classList.remove("show", "fullscreen-mode");
   });
+
+  modalOverlay.classList.remove("show");
+  modalOverlay.style.pointerEvents = "none";
+
+  // 🔥 Reset keyboard navigation state
+  currentIndex = -1;
+
+  document.querySelectorAll(".keyboard-selected")
+    .forEach(el => el.classList.remove("keyboard-selected"));
+
+  // 🔥 Restore focus safely
+  setTimeout(() => {
+    searchInput.focus();
+  }, 50);
+});
+
 
   /* ==========================
      LIVE PRICE + LIVE CHART UPDATE (OLD WORKING LOGIC)
@@ -190,37 +290,359 @@ document.addEventListener("DOMContentLoaded", () => {
 ========================= */
 
 const searchInput = document.querySelector(".stock-search-input");
+const suggestionBox = document.getElementById("searchSuggestions");
 
-if (searchInput) {
-  const stockCards = document.querySelectorAll(
-    ".nvidia-card-container, \
-     .microsoft-card-container, \
-     .apple-card-container, \
-     .amazon-card-container, \
-     .google-card-container, \
-     .visa-card-container, \
-     .meta-card-container, \
-     .tesla-card-container, \
-     .berkshire-card-container, \
-     .jpm-card-container"
+const SUGGESTION_SOURCE = [
+  { name: "NVIDIA", symbol: "NVDA" },
+  { name: "Microsoft", symbol: "MSFT" },
+  { name: "Apple", symbol: "AAPL" },
+  { name: "Amazon", symbol: "AMZN" },
+  { name: "Google", symbol: "GOOGL" },
+  { name: "Tesla", symbol: "TSLA" },
+  { name: "Meta", symbol: "META" },
+  { name: "Visa", symbol: "V" },
+  { name: "Berkshire Hathaway", symbol: "BRK-B" },
+  { name: "JPMorgan", symbol: "JPM" }
+];
+
+const stockContainers = document.querySelectorAll(
+  ".nvidia-card-container, \
+   .microsoft-card-container, \
+   .apple-card-container, \
+   .amazon-card-container, \
+   .google-card-container, \
+   .visa-card-container, \
+   .meta-card-container, \
+   .tesla-card-container, \
+   .berkshire-card-container, \
+   .jpm-card-container"
+);
+
+searchInput.addEventListener("input", () => {
+
+  const query = searchInput.value.toLowerCase().trim();
+  let firstMatch = null;
+
+  // 🔥 If search empty → FULL RESET
+  if (!query) {
+    currentIndex = -1;
+
+    document.querySelectorAll(".keyboard-selected")
+      .forEach(el => el.classList.remove("keyboard-selected"));
+
+    stockContainers.forEach(container => {
+      container.classList.remove("hidden");
+    });
+
+    return;
+  }
+
+  stockContainers.forEach(container => {
+
+    const text = container.innerText.toLowerCase();
+
+    if (text.includes(query)) {
+      container.classList.remove("hidden");
+
+      if (!firstMatch) firstMatch = container;
+
+    } else {
+      container.classList.add("hidden");
+    }
+  });
+
+});
+searchInput.addEventListener("input", () => {
+
+  const query = searchInput.value.toLowerCase().trim();
+
+  suggestionBox.innerHTML = "";
+
+  if (!query) {
+    suggestionBox.style.display = "none";
+    return;
+  }
+
+  const matches = SUGGESTION_SOURCE.filter(stock =>
+    stock.name.toLowerCase().includes(query) ||
+    stock.symbol.toLowerCase().includes(query)
   );
 
-  searchInput.addEventListener("input", () => {
-    const value = searchInput.value.toLowerCase().trim();
+  if (!matches.length) {
+    suggestionBox.style.display = "none";
+    return;
+  }
 
-    stockCards.forEach(card => {
-      const text = card.innerText.toLowerCase();
+  matches.slice(0,5).forEach(stock => {
 
-      if (text.includes(value)) {
-        card.classList.remove("hidden");
-      } else {
-        card.classList.add("hidden");
-      }
-    });
+    const item = document.createElement("div");
+    item.className = "suggestion-item";
+
+    item.innerHTML = `
+      <span>${stock.name}</span>
+      <span class="suggestion-symbol">${stock.symbol}</span>
+    `;
+
+    item.addEventListener("click", () => {
+
+  searchInput.value = stock.name;
+  suggestionBox.style.display = "none";
+  suggestionIndex = -1;
+
+  searchInput.dispatchEvent(new Event("input"));
+
+  // 🔥 Find correct card container
+  const match = Array.from(stockContainers).find(container =>
+    container.innerText.toLowerCase().includes(stock.name.toLowerCase())
+  );
+
+  if (match) {
+    const card = match.querySelector("div");
+    card?.click();
+  }
+
+});
+
+
+    suggestionBox.appendChild(item);
   });
+
+  suggestionBox.style.display = "block";
+});
+// ==========================
+// HIDE SUGGESTIONS ON OUTSIDE CLICK
+// ==========================
+document.addEventListener("click", (e) => {
+  if (!e.target.closest(".stock-search-wrapper")) {
+    suggestionBox.style.display = "none";
+  }
+});
+
+
+
+ 
+let currentIndex = -1;
+let suggestionIndex = -1;
+
+// ==========================
+// GLOBAL KEYBOARD NAVIGATION
+// ==========================
+document.addEventListener("keydown", (e) => {
+
+  const query = searchInput.value.trim();
+  const suggestions = suggestionBox.querySelectorAll(".suggestion-item");
+  const suggestionsVisible = suggestionBox.style.display === "block";
+
+  // 🔹 If user typing inside STOX chat → ignore
+  if (document.activeElement === document.getElementById("stox-input")) {
+    return;
+  }
+
+  // =========================
+  // SUGGESTION MODE
+  // =========================
+  if (suggestionsVisible && suggestions.length && document.activeElement === searchInput) {
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      suggestionIndex++;
+      if (suggestionIndex >= suggestions.length) suggestionIndex = 0;
+      updateSuggestionSelection(suggestions);
+      return;
+    }
+
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      suggestionIndex--;
+      if (suggestionIndex < 0) suggestionIndex = suggestions.length - 1;
+      updateSuggestionSelection(suggestions);
+      return;
+    }
+
+    if (e.key === "Enter") {
+      e.preventDefault();
+
+      if (suggestionIndex >= 0 && suggestions[suggestionIndex]) {
+        suggestions[suggestionIndex].click();
+        suggestionBox.style.display = "none";
+        suggestionIndex = -1;
+      }
+      return;
+    }
+
+    if (e.key === "Escape") {
+      suggestionBox.style.display = "none";
+      suggestionIndex = -1;
+      return;
+    }
+  }
+
+  // =========================
+  // STOCK CARD NAVIGATION
+  // =========================
+
+  const visibleStocks = Array.from(stockContainers)
+    .filter(container => !container.classList.contains("hidden"));
+
+  if (!visibleStocks.length) return;
+
+  const columns = 5;
+  const total = visibleStocks.length;
+if (e.key === "ArrowDown") {
+  e.preventDefault();
+
+  // 🔥 If typing in search → go directly to FIRST STOCK
+  if (document.activeElement === searchInput) {
+    searchInput.blur();
+    searchInput.classList.remove("search-active");
+
+    currentIndex = 0;
+    updateSelection(visibleStocks);
+    return;
+  }
+
+  // 🔥 If neutral → go to SEARCH LEVEL highlight
+  if (currentIndex === -1) {
+    searchInput.classList.add("search-active");
+    currentIndex = -2;
+    return;
+  }
+
+  // 🔥 If on search highlight → go to first stock
+  if (currentIndex === -2) {
+    searchInput.classList.remove("search-active");
+    currentIndex = 0;
+    updateSelection(visibleStocks);
+    return;
+  }
+
+  // 🔥 Normal grid navigation
+  if (currentIndex + columns < total) {
+    currentIndex += columns;
+    updateSelection(visibleStocks);
+  }
 }
 
 
+
+if (e.key === "ArrowUp") {
+  e.preventDefault();
+
+  // 🔥 If typing in search → just exit typing
+  if (document.activeElement === searchInput) {
+    searchInput.blur();
+    searchInput.classList.remove("search-active");
+    currentIndex = -1;
+    return;
+  }
+
+  // 🔥 If on search highlight → go neutral
+  if (currentIndex === -2) {
+    searchInput.classList.remove("search-active");
+    currentIndex = -1;
+    return;
+  }
+
+  // 🔥 If on first row → go to search highlight
+  if (currentIndex >= 0 && currentIndex < columns) {
+    document.querySelectorAll(".keyboard-selected")
+      .forEach(el => el.classList.remove("keyboard-selected"));
+
+    searchInput.classList.add("search-active");
+    currentIndex = -2;
+    return;
+  }
+
+  // 🔥 Normal upward navigation
+  if (currentIndex >= columns) {
+    currentIndex -= columns;
+    updateSelection(visibleStocks);
+  }
+}
+
+
+
+
+  if (e.key === "ArrowRight") {
+    e.preventDefault();
+    if (currentIndex === -1) currentIndex = 0;
+    else if (currentIndex + 1 < total) currentIndex++;
+    updateSelection(visibleStocks);
+    return;
+  }
+
+  if (e.key === "ArrowLeft") {
+    e.preventDefault();
+    if (currentIndex > 0) currentIndex--;
+    updateSelection(visibleStocks);
+    return;
+  }
+
+ if (e.key === "Enter") {
+  e.preventDefault();
+
+  if (currentIndex === -1 || currentIndex === -2) {
+    searchInput.focus();
+    return;
+  }
+
+  if (currentIndex >= 0 && visibleStocks[currentIndex]) {
+    visibleStocks[currentIndex]
+      .querySelector("div")
+      ?.click();
+  }
+}
+
+
+
+});
+
+
+
+
+
+function updateSelection(visibleStocks) {
+
+  // remove old highlights
+  document.querySelectorAll(".keyboard-selected")
+    .forEach(el => el.classList.remove("keyboard-selected"));
+
+  if (currentIndex >= 0 && visibleStocks[currentIndex]) {
+
+    const container = visibleStocks[currentIndex];
+
+    const card = container.querySelector(
+      ".nvidia-card, \
+       .microsoft-card, \
+       .apple-card, \
+       .amazon-card, \
+       .google-card, \
+       .visa-card, \
+       .meta-card, \
+       .tesla-card, \
+       .berkshire-card, \
+       .jpm-card"
+    );
+
+    card?.classList.add("keyboard-selected");
+
+    container.scrollIntoView({
+      behavior: "smooth",
+      block: "center"
+    });
+  }
+}
+function updateSuggestionSelection(suggestions) {
+
+  suggestions.forEach(item =>
+    item.classList.remove("suggestion-active")
+  );
+
+  if (suggestionIndex >= 0 && suggestions[suggestionIndex]) {
+    suggestions[suggestionIndex]
+      .classList.add("suggestion-active");
+  }
+}
 
   /* ==========================
      STOX PANEL (FIXED & STABLE)
@@ -322,6 +744,11 @@ if (stoxMic) {
   }
 // 🧠 CONTEXT MEMORY (PHASE 2.2.4)
   let lastStockContext = null;
+  /* =========================
+   STOCK INTELLIGENCE DATABASE (PHASE 3.3)
+========================= */
+
+
 
 function addStoxMessage(text, sender = "stox") {
   const msg = document.createElement("div");
@@ -349,6 +776,8 @@ function addStoxMessage(text, sender = "stox") {
   stoxInput.value = "";
 
   const msg = text.toLowerCase();
+  const stockKey = getStockKey(msg);
+
 
   setTimeout(() => {
     // greetings
@@ -375,144 +804,95 @@ function addStoxMessage(text, sender = "stox") {
       return;
     }
     // ==========================
-// STOCK EXPLANATION (PHASE 2.2.1)
+// SMART STOCK AI (PHASE 3.3 CLEAN VERSION)
 // ==========================
-if (msg.includes("explain") || msg.includes("about") || msg.includes("what is")) {
-
-  if (msg.includes("nvidia")) {
-  lastStockContext = "nvidia"; // ✅ FIX
-  addStoxMessage(
-    "NVIDIA is a global leader in graphics processors (GPUs) and AI chips. " +
-    "Its technology powers gaming, data centers, artificial intelligence, and autonomous vehicles. " +
-    "NVIDIA has grown rapidly due to rising demand for AI computing, but like all tech stocks, it can be volatile."
-  );
-  return;
-}
 
 
-  if (msg.includes("tesla")) {
-    lastStockContext = "tesla"; 
+// If stock name detected
+if (stockKey) {
+
+  const stock = STOCK_DATABASE[stockKey];
+  lastStockContext = stockKey;
+  // --- Direct exact stock name ---
+  if (msg === stock.name.toLowerCase()) {
+    addStoxMessage(stock.description);
+    return;
+  }
+
+  // --- EXPLANATION ---
+  if (
+    msg.includes("explain") ||
+    msg.includes("about") ||
+    msg.includes("what is")
+  ) {
     addStoxMessage(
-      "Tesla focuses on electric vehicles, battery technology, and clean energy solutions. " +
-      "It is known for innovation and strong brand value. " +
-      "Tesla’s stock growth depends on EV adoption, competition, and global economic conditions."
+      `${stock.description}\n\nSector: ${stock.sector || "Technology"}`
     );
     return;
   }
 
-  if (msg.includes("apple")) {
-     lastStockContext = "apple"; 
-    addStoxMessage(
-      "Apple designs consumer electronics like iPhone, Mac, and Apple Watch. " +
-      "It has a strong ecosystem and loyal customer base. " +
-      "Apple is considered relatively stable compared to many tech stocks, but growth is usually steady rather than explosive."
-    );
-    return;
-  }
-}
-
-  /* ==========================
-   FOLLOW-UP MEMORY (2.2.4)
-   ========================== */
-if (msg.includes("future") || msg.includes("growth")) {
-
-  if (!lastStockContext) {
-    addStoxMessage("Which stock are you asking about?");
+  // --- FUTURE / GROWTH ---
+  if (
+    msg.includes("future") ||
+    msg.includes("growth")
+  ) {
+    addStoxMessage(stock.future);
     return;
   }
 
-  if (lastStockContext === "nvidia") {
-    addStoxMessage(
-      "NVIDIA’s future depends on AI demand, data centers, and competition. " +
-      "Growth potential is high but volatility is also high."
-    );
+  // --- RISK ---
+  if (msg.includes("risk")) {
+    addStoxMessage(stock.risk);
     return;
   }
 
-  if (lastStockContext === "tesla") {
-    addStoxMessage(
-      "Tesla’s future depends on EV adoption, competition, and regulation. " +
-      "It has strong potential but higher risk."
-    );
-    return;
-  }
-
-  if (lastStockContext === "apple") {
-    addStoxMessage(
-      "Apple’s future growth is steady rather than explosive. " +
-      "It benefits from loyal users and services revenue."
-    );
+  // --- Direct stock name only ---
+  if (msg === stockKey) {
+    addStoxMessage(stock.description);
     return;
   }
 }
-/* ==========================
-   RISK ANALYSIS (PHASE 2.2.4)
-   ========================== */
-if (msg.includes("risk")) {
 
-  if (!lastStockContext) {
-    addStoxMessage("Which stock are you asking about?");
-    return;
-  }
-
-  if (lastStockContext === "nvidia") {
-    addStoxMessage(
-      "NVIDIA has high growth potential but also high volatility. " +
-      "Risks include competition, chip demand cycles, and market corrections."
-    );
-    return;
-  }
-
-  if (lastStockContext === "tesla") {
-    addStoxMessage(
-      "Tesla carries risks from competition, regulation, and global economic conditions. " +
-      "Its stock can be volatile."
-    );
-    return;
-  }
-
-  if (lastStockContext === "apple") {
-    addStoxMessage(
-      "Apple has relatively lower risk compared to many tech stocks, " +
-      "but growth risk exists due to market saturation."
-    );
-    return;
-  }
-}
 
 // ==========================
-// OPEN STOCK MODALS (PHASE 2.2.2)
+// FOLLOW-UP MEMORY (if no stock mentioned)
 // ==========================
-if (msg.includes("open") || msg.includes("show")) {
 
-  if (msg.includes("nvidia")) {
-    lastStockContext = "nvidia";  
-    document.querySelector(".nvidia-card")?.click();
-    addStoxMessage("Opening NVIDIA stock details 🚀");
+if (
+  (msg.includes("future") ||
+   msg.includes("growth") ||
+   msg.includes("risk")) &&
+  lastStockContext &&
+  STOCK_DATABASE[lastStockContext]
+) {
+
+  const stock = STOCK_DATABASE[lastStockContext];
+
+  if (msg.includes("future") || msg.includes("growth")) {
+    addStoxMessage(stock.future);
     return;
   }
 
-  if (msg.includes("tesla")) {
-      lastStockContext = "tesla";
-    document.querySelector(".tesla-card")?.click();
-    addStoxMessage("Opening Tesla stock details ⚡");
-    return;
-  }
-
-  if (msg.includes("apple")) {
-      lastStockContext = "apple";
-    document.querySelector(".apple-card")?.click();
-    addStoxMessage("Opening Apple stock details 🍎");
-    return;
-  }
-
-  if (msg.includes("microsoft")) {
-        lastStockContext = "microsoft";
-    document.querySelector(".microsoft-card")?.click();
-    addStoxMessage("Opening Microsoft stock details 🪟");
+  if (msg.includes("risk")) {
+    addStoxMessage(stock.risk);
     return;
   }
 }
+
+
+if ((msg.includes("open") || msg.includes("show")) && stockKey) {
+
+  const cardClass = `${stockKey}-card`;
+  const card = document.querySelector(`.${cardClass}`);
+
+  if (card) {
+    card.click();
+    addStoxMessage(`Opening ${STOCK_DATABASE[stockKey].name} details 📊`);
+    lastStockContext = stockKey;
+    return;
+  }
+}
+
 // ==========================
 // NAVIGATION COMMANDS (PHASE 2.2.3)
 // ==========================
@@ -547,35 +927,7 @@ if (msg.includes("close sidebar")) {
   addStoxMessage("Sidebar closed 📁");
   return;
 }
-// ==========================
-// DIRECT STOCK NAME (2.2.4)
-// ==========================
-if (msg === "nvidia" || msg === "nvda") {
-  lastStockContext = "nvidia";
-  addStoxMessage(
-    "NVIDIA is a global leader in GPUs and AI chips. " +
-    "You can ask about its future, risk, or growth."
-  );
-  return;
-}
 
-if (msg === "tesla" || msg === "tsla") {
-  lastStockContext = "tesla";
-  addStoxMessage(
-    "Tesla focuses on electric vehicles and clean energy. " +
-    "You can ask about its future, risk, or growth."
-  );
-  return;
-}
-
-if (msg === "apple" || msg === "aapl") {
-  lastStockContext = "apple";
-  addStoxMessage(
-    "Apple designs consumer electronics and software. " +
-    "You can ask about its future, risk, or growth."
-  );
-  return;
-}
 
 
     // fallback
