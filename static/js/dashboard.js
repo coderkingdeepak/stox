@@ -1,57 +1,4 @@
-/* ===============================
-   STOX AI DATABASE (PHASE 3.3)
-=============================== */
-
-const STOCK_DATABASE = {
-  nvidia: {
-    name: "NVIDIA",
-    symbol: "NVDA",
-    sector: "Semiconductors / AI",
-    risk: "High volatility due to rapid AI-driven growth.",
-    future: "Strong AI and data center demand could drive long-term growth.",
-    description:
-      "NVIDIA is a global leader in GPUs and artificial intelligence chips. It powers gaming, AI data centers, and autonomous systems."
-  },
-
-  tesla: {
-    name: "Tesla",
-    symbol: "TSLA",
-    sector: "Electric Vehicles / Clean Energy",
-    risk: "High competition and market volatility.",
-    future: "Growth depends on EV adoption and innovation in battery tech.",
-    description:
-      "Tesla designs electric vehicles and clean energy solutions."
-  },
-
-  apple: {
-    name: "Apple",
-    symbol: "AAPL",
-    sector: "Consumer Technology",
-    risk: "Moderate risk due to market saturation.",
-    future: "Steady long-term growth through ecosystem and services.",
-    description:
-      "Apple creates iPhones, Macs, and digital services."
-  }
-};
-
-function getStockKey(message) {
-  message = message.toLowerCase();
-
-  for (const key in STOCK_DATABASE) {
-    const stock = STOCK_DATABASE[key];
-
-    if (
-      message.includes(stock.name.toLowerCase()) ||
-      message.includes(stock.symbol.toLowerCase())
-    ) {
-      return key;
-    }
-  }
-
-  return null;
-}
-
-
+import { stoxBrain } from "./stoxbrain.js";
 
 /* ===== Make toggleDropdown global ===== */
 function toggleDropdown() {
@@ -650,11 +597,12 @@ function updateSuggestionSelection(suggestions) {
   console.log("STOX JS LOADED");
 
   const stoxOrb = document.getElementById("stox-orb");
-  const stoxPanel = document.getElementById("stox-panel");
-  const stoxClose = document.getElementById("stox-close");
-  const stoxInput = document.getElementById("stox-input");
-  const headerLogoSlot = document.getElementById("stox-header-logo");
- 
+const stoxPanel = document.getElementById("stox-panel");
+const stoxClose = document.getElementById("stox-close");
+const stoxInput = document.getElementById("stox-input");
+const headerLogoSlot = document.getElementById("stox-header-logo");
+
+
 
 
   if (!stoxOrb || !stoxPanel || !stoxClose || !headerLogoSlot) return;
@@ -722,6 +670,15 @@ function closeStox() {
 /* ==========================
    STOX CHAT – PHASE 2.1.1
    ========================== */
+let voiceReplyEnabled = false;
+let clickSpeakEnabled = false;
+
+let currentUtterance = null;
+let isPaused = false;
+let lastSpokenText = "";
+
+
+
 document.addEventListener("DOMContentLoaded", () => {
 
   const stoxMessages = document.getElementById("stox-messages");
@@ -765,174 +722,170 @@ function addStoxMessage(text, sender = "stox") {
 }
 
 }
+function renderStoxCard(response) {
+
+  const wrapper = document.createElement("div");
+  wrapper.className = "stox-card";
+
+  // Title
+  if (response.title) {
+    const title = document.createElement("div");
+    title.className = "stox-card-title";
+    title.textContent = response.title;
+    wrapper.appendChild(title);
+    
+
+  }
+
+  if (response.body) {
+    const body = document.createElement("div");
+    body.className = "stox-card-body";
+    body.textContent = response.body;
+    wrapper.appendChild(body);
+
+    // 🔊 Click Speak (correct place)
+    body.addEventListener("mouseup", () => {
+
+        if (!clickSpeakEnabled) return;
+        if (!voiceReplyEnabled) return;
+
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) return;
+
+        const selectedText = selection.toString().trim();
+        if (selectedText.length > 0) {
+            speakStox(selectedText);
+        }
+    });
+}
 
 
+  // Confidence
+  if (response.confidence) {
+    const badge = document.createElement("div");
+    badge.className = "stox-confidence";
+    badge.textContent = `Confidence: ${response.confidence}%`;
+    wrapper.appendChild(badge);
+  }
 
-  function sendStoxMessage() {
+  stoxMessages.appendChild(wrapper);
+
+  const bodyScroll = stoxMessages.parentElement;
+  bodyScroll.scrollTop = bodyScroll.scrollHeight;
+  // 🔊 Voice Reply Support (Phase 4.6 Fix)
+if (voiceReplyEnabled && response.body) {
+  speakStox(response.body);
+}
+
+}
+// ===============================
+// APPLE STYLE INTELLIGENCE CARD
+// ===============================
+
+function renderAppleCard(data) {
+
+    const body = data.response.body;
+    const confidence = data.response.confidence;
+    const mode = data.mode;
+
+    const summary = body.split("COMPETITIVE_ADVANTAGES:")[0]
+                        .replace("SUMMARY:", "")
+                        .trim();
+
+    const advantages = body.split("COMPETITIVE_ADVANTAGES:")[1]
+                        ?.split("RISKS:")[0]
+                        ?.trim()
+                        ?.split("-")
+                        ?.filter(item => item.trim() !== "") || [];
+
+    const risks = body.split("RISKS:")[1]
+                        ?.split("FUTURE_OUTLOOK:")[0]
+                        ?.trim()
+                        ?.split("-")
+                        ?.filter(item => item.trim() !== "") || [];
+
+    const future = body.split("FUTURE_OUTLOOK:")[1]
+                        ?.trim()
+                        ?.split("-")
+                        ?.filter(item => item.trim() !== "") || [];
+
+    document.getElementById("summary-content").innerText = summary;
+
+    const advList = document.getElementById("advantages-content");
+    advList.innerHTML = "";
+    advantages.forEach(item => {
+        advList.innerHTML += `<li>${item}</li>`;
+    });
+
+    const riskList = document.getElementById("risks-content");
+    riskList.innerHTML = "";
+    risks.forEach(item => {
+        riskList.innerHTML += `<li>${item}</li>`;
+    });
+
+    const futureList = document.getElementById("future-content");
+    futureList.innerHTML = "";
+    future.forEach(item => {
+        futureList.innerHTML += `<li>${item}</li>`;
+    });
+
+    document.getElementById("confidence-fill").style.width = confidence + "%";
+    document.getElementById("confidence-percent").innerText = confidence + "%";
+
+    const badge = document.getElementById("ai-mode-badge");
+    badge.innerText = mode.toUpperCase();
+
+    if (mode === "groq") badge.style.background = "#d1fae5";
+    if (mode === "openai") badge.style.background = "#dbeafe";
+    if (mode === "gemini") badge.style.background = "#f3e8ff";
+
+    document.getElementById("stox-intelligence-card").classList.remove("hidden");
+}
+
+
+async function sendStoxMessage() {
   const text = stoxInput.value.trim();
   if (!text) return;
 
   addStoxMessage(text, "user");
   stoxInput.value = "";
 
-  const msg = text.toLowerCase();
-  const stockKey = getStockKey(msg);
-
-
-  setTimeout(() => {
-    // greetings
-    if (msg.includes("hello") || msg.includes("hi")) {
-      addStoxMessage("Hey 👋 I’m STOX. Your stock assistant.");
-      return;
+  // 🔥 Call Brain Here
+ // 🔥 Call Backend AI Endpoint
+const apiResponse = await fetch("/stox_ai", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    message: text,
+    context: {
+      lastStock: lastStockContext
     }
+  })
+});
 
-    // help
-    if (msg.includes("help")) {
-      addStoxMessage(
-        "You can try typing:\n" +
-        "• hello\n" +
-        "• help\n" +
-        "• thanks\n\n" +
-        "Stock features are coming next 🚀"
-      );
-      return;
-    }
+const data = await apiResponse.json();
+const response = data.response;
 
-    // thanks
-    if (msg.includes("thank")) {
-      addStoxMessage("You’re welcome 😊 Happy to help!");
-      return;
-    }
-    // ==========================
-// SMART STOCK AI (PHASE 3.3 CLEAN VERSION)
-// ==========================
-
-
-// If stock name detected
-if (stockKey) {
-
-  const stock = STOCK_DATABASE[stockKey];
-  lastStockContext = stockKey;
-  // --- Direct exact stock name ---
-  if (msg === stock.name.toLowerCase()) {
-    addStoxMessage(stock.description);
-    return;
-  }
-
-  // --- EXPLANATION ---
-  if (
-    msg.includes("explain") ||
-    msg.includes("about") ||
-    msg.includes("what is")
-  ) {
-    addStoxMessage(
-      `${stock.description}\n\nSector: ${stock.sector || "Technology"}`
-    );
-    return;
-  }
-
-  // --- FUTURE / GROWTH ---
-  if (
-    msg.includes("future") ||
-    msg.includes("growth")
-  ) {
-    addStoxMessage(stock.future);
-    return;
-  }
-
-  // --- RISK ---
-  if (msg.includes("risk")) {
-    addStoxMessage(stock.risk);
-    return;
-  }
-
-  // --- Direct stock name only ---
-  if (msg === stockKey) {
-    addStoxMessage(stock.description);
-    return;
-  }
-}
-
-
-// ==========================
-// FOLLOW-UP MEMORY (if no stock mentioned)
-// ==========================
-
-if (
-  (msg.includes("future") ||
-   msg.includes("growth") ||
-   msg.includes("risk")) &&
-  lastStockContext &&
-  STOCK_DATABASE[lastStockContext]
-) {
-
-  const stock = STOCK_DATABASE[lastStockContext];
-
-  if (msg.includes("future") || msg.includes("growth")) {
-    addStoxMessage(stock.future);
-    return;
-  }
-
-  if (msg.includes("risk")) {
-    addStoxMessage(stock.risk);
-    return;
-  }
-}
-
-
-if ((msg.includes("open") || msg.includes("show")) && stockKey) {
-
-  const cardClass = `${stockKey}-card`;
-  const card = document.querySelector(`.${cardClass}`);
-
-  if (card) {
-    card.click();
-    addStoxMessage(`Opening ${STOCK_DATABASE[stockKey].name} details 📊`);
-    lastStockContext = stockKey;
-    return;
-  }
-}
-
-// ==========================
-// NAVIGATION COMMANDS (PHASE 2.2.3)
-// ==========================
-if (
-  msg.includes("top stocks") ||
-  msg.includes("show stocks") ||
-  msg.includes("stocks list")
-) {
-  document
-    .querySelector(".stock-card-wrapper")
-    ?.scrollIntoView({ behavior: "smooth" });
-
-  addStoxMessage("Here are the top global stocks 📈");
-  return;
-}
-
-if (msg.includes("go home") || msg.includes("dashboard")) {
-  window.scrollTo({ top: 0, behavior: "smooth" });
-  addStoxMessage("Back to dashboard 🏠");
-  return;
-}
-
-if (msg.includes("open sidebar")) {
-  document.getElementById("sidebarCheckbox")?.click();
-  addStoxMessage("Sidebar opened 📂");
-  return;
-}
-
-if (msg.includes("close sidebar")) {
-  const cb = document.getElementById("sidebarCheckbox");
-  if (cb && cb.checked) cb.click();
-  addStoxMessage("Sidebar closed 📁");
+if (!response) {
+  addStoxMessage("System error.");
   return;
 }
 
 
+  // Update memory
+  if (response.updatedContext) {
+    lastStockContext = response.updatedContext;
+  }
 
-    // fallback
-    addStoxMessage("I didn’t get that yet 🤖. Type help.");
-  }, 300);
+ // If AI response is structured → use Apple card
+if (response.body.includes("COMPETITIVE_ADVANTAGES:")) {
+    renderAppleCard(data);
+} else {
+    renderStoxCard(response);
+}
+
 }
 
 
@@ -948,42 +901,68 @@ window.sendStoxMessage = sendStoxMessage;
    STOX VOICE REPLY TOGGLE
    ========================== */
 
-let voiceReplyEnabled = false; // DEFAULT = OFF
 
-const voiceToggle = document.getElementById("stox-voice-toggle");
 
-if (voiceToggle) {
-  voiceToggle.addEventListener("click", () => {
+const voiceReplyToggle = document.getElementById("voice-reply-toggle");
+const clickSpeakToggle = document.getElementById("click-speak-toggle");
+
+if (voiceReplyToggle) {
+  voiceReplyToggle.addEventListener("click", () => {
     voiceReplyEnabled = !voiceReplyEnabled;
 
-    voiceToggle.classList.toggle("on", voiceReplyEnabled);
-    voiceToggle.querySelector(".toggle-text").textContent =
+    voiceReplyToggle.classList.toggle("on", voiceReplyEnabled);
+    voiceReplyToggle.querySelector(".toggle-text").textContent =
       voiceReplyEnabled ? "ON" : "OFF";
+
+    if (!voiceReplyEnabled && speechSynthesis.speaking) {
+      speechSynthesis.pause();
+    }
+
+    if (voiceReplyEnabled && speechSynthesis.paused) {
+      speechSynthesis.resume();
+    }
+  });
+}
+
+if (clickSpeakToggle) {
+  clickSpeakToggle.addEventListener("click", () => {
+    clickSpeakEnabled = !clickSpeakEnabled;
+
+    clickSpeakToggle.classList.toggle("on", clickSpeakEnabled);
+    clickSpeakToggle.querySelector(".toggle-text").textContent =
+      clickSpeakEnabled ? "ON" : "OFF";
   });
 }
 
 
+
+
   console.log("✅ STOX Phase 2.1.1 chat ready");
 });
-function speakStox(text) {
+function speakStox(text, startIndex = 0) {
   if (!window.speechSynthesis) return;
-
-  // ❌ Don’t speak while mic is listening
+  if (!voiceReplyEnabled) return;
   if (isListening) return;
 
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = "en-US";
-  utterance.rate = 1;
-  utterance.pitch = 1;
+  speechSynthesis.cancel();
+  isPaused = false;
 
-  // Optional: choose a smoother voice
+  lastSpokenText = text.substring(startIndex);
+
+  currentUtterance = new SpeechSynthesisUtterance(lastSpokenText);
+  currentUtterance.lang = "en-US";
+  currentUtterance.rate = 1;
+  currentUtterance.pitch = 1;
+
   const voices = speechSynthesis.getVoices();
-  const preferred = voices.find(v => v.name.toLowerCase().includes("female"));
-  if (preferred) utterance.voice = preferred;
+  const preferred = voices.find(v =>
+    v.name.toLowerCase().includes("female")
+  );
+  if (preferred) currentUtterance.voice = preferred;
 
-  speechSynthesis.cancel(); // stop previous
-  speechSynthesis.speak(utterance);
+  speechSynthesis.speak(currentUtterance);
 }
+
 
 /* ===============================
    STOX Voice Input Engine (Phase 2.3.1)

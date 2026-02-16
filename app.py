@@ -1,11 +1,80 @@
-from flask import Flask, render_template, redirect, url_for, request, jsonify
+import os
+from openai import OpenAI
+from google import genai
+from groq import Groq
+
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+client_gemini = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+client_groq = Groq(api_key=os.getenv("GROQ_API_KEY"))
+
+
+
+from flask import Flask, render_template, redirect, url_for, request, jsonify, session
 import requests
 import json
 
 app = Flask(__name__)
+app.secret_key = "stox_secret_key_2026"
+OPENAI_ENABLED = True
+GEMINI_ENABLED = True
+GROQ_ENABLED = True
+
+
+
+# ===============================
+# STOX BACKEND DATABASE
+# ===============================
+
+STOCK_DATABASE = {
+    "nvidia": {
+        "name": "NVIDIA",
+        "sector": "Semiconductors / AI",
+        "risk": "High volatility due to rapid AI-driven growth.",
+        "future": "Strong AI and data center demand could drive long-term growth.",
+        "description": "NVIDIA is a global leader in GPUs and AI chips."
+    },
+    "tesla": {
+        "name": "Tesla",
+        "sector": "Electric Vehicles / Clean Energy",
+        "risk": "High competition and market volatility.",
+        "future": "Growth depends on EV adoption and battery innovation.",
+        "description": "Tesla designs electric vehicles and clean energy systems."
+    },
+    "apple": {
+        "name": "Apple",
+        "sector": "Consumer Technology",
+        "risk": "Moderate risk due to market saturation.",
+        "future": "Steady growth via ecosystem and services expansion.",
+        "description": "Apple creates iPhones, Macs, and digital services."
+    }
+}
+# ===============================
+# STOX PERSONALITY ENGINE
+# ===============================
+
+def apply_personality(title, body, confidence, category="general"):
+
+    disclaimer = ""
+
+    # Add smart disclaimer only for forward-looking analysis
+    if category in ["future", "growth", "risk"]:
+        disclaimer = "\n\n⚠ Note: This analysis is informational and not financial advice."
+
+    # Professional structured formatting
+    formatted_body = (
+        f"{body.strip()}\n"
+        f"{disclaimer}"
+    )
+
+    return {
+        "title": title,
+        "body": formatted_body,
+        "confidence": confidence
+    }
+
 
 # ✅ EODHD API KEY
-API_KEY = "69873c3b8b18f1.56302887"
+API_KEY = "6992ad38352584.18657888"
 
 # ===== STOCK SYMBOLS =====
 SYMBOL_NVDA = "NVDA"
@@ -177,6 +246,268 @@ def stock_data(symbol):
         "symbol": symbol.upper(),
         "price": data.get("close"),
         "timestamp": data.get("timestamp")
+    })
+# ===============================
+# STOX AI BACKEND (PHASE 4.5)
+# Professional + Confident Tone
+# ===============================
+
+@app.route("/stox_ai", methods=["POST"])
+def stox_ai():
+
+    data = request.get_json()
+    user_message = data.get("message", "")
+    msg = user_message.lower().strip()
+
+    previous_stock = session.get("last_stock", None)
+    SYSTEM_PROMPT = """
+You are STOX, a professional AI stock intelligence assistant.
+
+Respond strictly in this format:
+
+SUMMARY:
+<2-3 sentence structured summary>
+
+COMPETITIVE_ADVANTAGES:
+- bullet
+- bullet
+
+RISKS:
+- bullet
+- bullet
+
+FUTURE_OUTLOOK:
+- bullet
+- bullet
+
+Professional tone only.
+No emojis.
+No disclaimers.
+"""
+
+    # =========================
+    # OPENAI MODE
+    # =========================
+    if OPENAI_ENABLED:
+        try:
+            print("🔥 Trying OpenAI...")
+
+            completion = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {
+                        "role": "system",
+                        "content":
+                        "You are STOX, a professional AI stock intelligence assistant. "
+                        "Tone: confident, structured, professional, not giving financial advice."
+                    },
+                    {
+                        "role": "user",
+                        "content": user_message
+                    }
+                ]
+            )
+
+            ai_text = completion.choices[0].message.content
+
+            return jsonify({
+                "mode": "openai",
+                "response": {
+                    "title": "🧠 STOX AI Analysis",
+                    "body": ai_text,
+                    "confidence": 95
+                }
+            })
+
+        except Exception as e:
+            print("OpenAI failed:", e)
+
+    # =========================
+    # GEMINI MODE
+    # =========================
+    if GEMINI_ENABLED:
+        try:
+            print("🟣 Trying Gemini...")
+
+            response = client_gemini.models.generate_content(
+                model="gemini-2.0-flash",
+                contents=f"""
+                You are STOX, a professional AI stock intelligence assistant.
+                Tone: confident, structured, professional, not giving financial advice.
+
+                User Question:
+                {user_message}
+                """
+            )
+
+            ai_text = response.text
+
+            return jsonify({
+                "mode": "gemini",
+                "response": {
+                    "title": "🧠 STOX AI Analysis",
+                    "body": ai_text,
+                    "confidence": 93
+                }
+            })
+
+        except Exception as e:
+            print("Gemini failed:", e)
+
+    # =========================
+    # GROQ MODE
+    # =========================
+    if GROQ_ENABLED:
+        try:
+            print("🟢 Trying Groq...")
+
+            completion = client_groq.chat.completions.create(
+                model="llama-3.3-70b-versatile",
+
+                messages=[
+                    {
+                        "role": "system",
+                        "content":
+                        "You are STOX, a professional AI stock intelligence assistant. "
+                        "Tone: confident, structured, professional, not giving financial advice."
+                    },
+                    {
+                        "role": "user",
+                        "content": user_message
+                    }
+                ]
+            )
+
+            ai_text = completion.choices[0].message.content
+
+            return jsonify({
+                "mode": "groq",
+                "response": {
+                    "title": "🧠 STOX AI Analysis",
+                    "body": ai_text,
+                    "confidence": 92
+                }
+            })
+
+        except Exception as e:
+            print("Groq failed:", e)
+
+    # =========================
+    # PERSONALITY ENGINE
+    # =========================
+    def format_response(title, body, confidence, category="general"):
+
+        if category == "future":
+            body += (
+                "\n\nThe growth trajectory remains influenced by broader market "
+                "conditions, industry competition, and strategic execution."
+            )
+
+        elif category == "risk":
+            body += (
+                "\n\nRisk exposure should be evaluated within the context of "
+                "overall portfolio strategy and market volatility."
+            )
+
+        elif category == "overview":
+            body += (
+                "\n\nThis overview highlights the company’s core positioning "
+                "within its sector."
+            )
+
+        if category in ["future", "risk"]:
+            body += (
+                "\n\n⚠ This analysis is provided for informational purposes only "
+                "and does not constitute financial advice."
+            )
+
+        return {
+            "title": title,
+            "body": body.strip(),
+            "confidence": confidence
+        }
+
+    # =========================
+    # LOCAL STOCK MATCHING
+    # =========================
+    for key, stock in STOCK_DATABASE.items():
+
+        if key in msg or stock["name"].lower() in msg:
+
+            session["last_stock"] = key
+
+            if "future" in msg or "growth" in msg:
+                return jsonify({
+                    "mode": "local",
+                    "response": format_response(
+                        f"🚀 GROWTH OUTLOOK — {stock['name'].upper()}",
+                        f"{stock['future']}\n\nRisk Consideration:\n{stock['risk']}",
+                        83,
+                        "future"
+                    )
+                })
+
+            if "risk" in msg:
+                return jsonify({
+                    "mode": "local",
+                    "response": format_response(
+                        f"⚠ RISK ANALYSIS — {stock['name'].upper()}",
+                        f"{stock['risk']}\n\nGrowth Perspective:\n{stock['future']}",
+                        79,
+                        "risk"
+                    )
+                })
+
+            return jsonify({
+                "mode": "local",
+                "response": format_response(
+                    f"📊 OVERVIEW — {stock['name'].upper()}",
+                    f"{stock['description']}\n\nSector: {stock['sector']}",
+                    90,
+                    "overview"
+                )
+            })
+
+    # =========================
+    # FOLLOW-UP MEMORY
+    # =========================
+    if previous_stock and previous_stock in STOCK_DATABASE:
+
+        stock = STOCK_DATABASE[previous_stock]
+
+        if "future" in msg or "growth" in msg:
+            return jsonify({
+                "mode": "local",
+                "response": format_response(
+                    f"🚀 CONTINUED OUTLOOK — {stock['name'].upper()}",
+                    stock["future"],
+                    80,
+                    "future"
+                )
+            })
+
+        if "risk" in msg:
+            return jsonify({
+                "mode": "local",
+                "response": format_response(
+                    f"⚠ CONTINUED RISK REVIEW — {stock['name'].upper()}",
+                    stock["risk"],
+                    76,
+                    "risk"
+                )
+            })
+
+    # =========================
+    # FINAL FALLBACK
+    # =========================
+    return jsonify({
+        "mode": "local",
+        "response": format_response(
+            "🤖 STOX",
+            "I did not fully understand your request. "
+            "You may ask about a company's overview, growth outlook, or risk profile.",
+            60
+        )
     })
 
 

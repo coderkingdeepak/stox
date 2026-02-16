@@ -494,17 +494,53 @@
 <!-- STOX SIDEBAR PANEL -->
 <div id="stox-panel">
 
-  <div class="stox-header">
-  <div id="stox-header-logo"></div>
+<div class="stox-header">
 
-  <!-- Voice reply toggle -->
-  <button id="stox-voice-toggle" class="voice-toggle" title="Voice reply">
-    <span class="toggle-knob"></span>
-    <span class="toggle-text">OFF</span>
+  <!-- SETTINGS (TOP LEFT) -->
+  <div class="stox-settings">
+
+    <!-- Image Settings Button -->
+    <button id="stox-settings-btn" class="icon-btn">
+      <img src="/static/images/settings.png" alt="Settings" />
+    </button>
+
+    <!-- Dropdown -->
+    <div class="stox-settings-menu">
+
+ <!-- Voice Reply Toggle -->
+  <button id="voice-reply-toggle" class="settings-item">
+    <span>Voice Reply</span>
+
+    <div class="voice-toggle">
+      <div class="toggle-knob"></div>
+      <span class="toggle-text">OFF</span>
+    </div>
   </button>
 
+<!-- Click Speak Toggle -->
+  <button id="click-speak-toggle" class="settings-item">
+    <span>Click Speak</span>
+
+    <div class="voice-toggle">
+      <div class="toggle-knob"></div>
+      <span class="toggle-text">OFF</span>
+    </div>
+  </button>
+
+
+    </div>
+
+  </div>
+
+  <!-- STOX LOGO CENTER -->
+  <div id="stox-header-logo"></div>
+
+  <!-- CLOSE BUTTON RIGHT -->
   <button id="stox-close">✕</button>
+
 </div>
+
+
 
 
   <div class="stox-body">
@@ -530,7 +566,43 @@
 
 <!-- ================= SCRIPTS ================= -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<div id="stox-intelligence-card" class="stox-card hidden">
+    <div class="stox-card-header">
+
+        <span class="stox-title">STOX Intelligence</span>
+        <span id="ai-mode-badge" class="mode-badge">AI</span>
+    </div>
+
+    <div class="stox-section">
+        <h4>Summary</h4>
+        <p id="summary-content"></p>
+    </div>
+
+    <div class="stox-section">
+        <h4>Competitive Advantages</h4>
+        <ul id="advantages-content"></ul>
+    </div>
+
+    <div class="stox-section">
+        <h4>Risks</h4>
+        <ul id="risks-content"></ul>
+    </div>
+
+    <div class="stox-section">
+        <h4>Future Outlook</h4>
+        <ul id="future-content"></ul>
+    </div>
+
+    <div class="confidence-wrapper">
+        <div class="confidence-label">Confidence</div>
+        <div class="confidence-bar">
+            <div id="confidence-fill"></div>
+        </div>
+        <span id="confidence-percent"></span>
+    </div>
+</div>
+
 </body>
 </html>
 
