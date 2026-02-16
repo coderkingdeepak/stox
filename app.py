@@ -1,8 +1,17 @@
+from dotenv import load_dotenv
 import os
+
+# Load environment variables
+load_dotenv()
+
+
+
+# Import AI clients
 from openai import OpenAI
 from google import genai
 from groq import Groq
 
+# Initialize clients
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 client_gemini = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 client_groq = Groq(api_key=os.getenv("GROQ_API_KEY"))
@@ -14,10 +23,18 @@ import requests
 import json
 
 app = Flask(__name__)
-app.secret_key = "stox_secret_key_2026"
+app.secret_key = os.getenv("FLASK_SECRET_KEY")
 OPENAI_ENABLED = True
 GEMINI_ENABLED = True
 GROQ_ENABLED = True
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=["30 per minute"]
+)
 
 
 
