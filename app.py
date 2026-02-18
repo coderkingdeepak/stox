@@ -8,7 +8,7 @@ from flask import Flask, render_template, redirect, url_for, request, jsonify, s
 
 # Import AI clients
 from openai import OpenAI
-from google import genai
+import google.generativeai as genai
 from groq import Groq
 from core.model_router import choose_model
 from core.memory_engine import update_memory, get_previous_context, build_context_prompt
@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 # Initialize clients
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-client_gemini = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 client_groq = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 
@@ -362,17 +362,21 @@ def stox_ai():
         elif selected_model == "gemini" and GEMINI_ENABLED:
             logger.info("Trying Gemini")
 
-            response = client_gemini.models.generate_content(
-                model="gemini-2.0-flash",
-                contents=f"""
-                You are STOX...
+            model = genai.GenerativeModel("gemini-2.0-flash")
+
+            response = model.generate_content(
+                f"""
+                You are STOX, a professional AI stock intelligence assistant.
+                Tone: confident, structured, professional, not giving financial advice.
+
+                User Question:
                 {contextual_message}
                 """
             )
 
             ai_text = response.text
             mode_used = "gemini"
-
+            
         elif GROQ_ENABLED:
             logger.info("Trying Groq")
 
