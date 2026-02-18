@@ -931,6 +931,39 @@
   color: #eaeaea;
   border-bottom-left-radius: 4px;
 }
+.stox-msg.thinking {
+  font-style: italic;
+  opacity: 0.7;
+  animation: blink 1.2s infinite;
+}
+
+@keyframes blink {
+  0% { opacity: 0.4; }
+  50% { opacity: 1; }
+  100% { opacity: 0.4; }
+}
+
+.stox-sentiment {
+  font-weight: 700;
+  font-size: 15px;
+  margin-left: 4px;
+}
+
+.stox-sentiment.bullish {
+  color: #16a34a;   /* strong green */
+}
+
+.stox-sentiment.bearish {
+  color: #dc2626;   /* strong red */
+}
+
+.stox-sentiment.neutral {
+  color: #f59e0b;   /* strong amber */
+}
+.stox-strong {
+  font-weight: 700;
+  font-size: 15px;
+}
 
 /* =========================
    STOX CARD (PURE WHITE)
@@ -1196,6 +1229,17 @@
 
 .settings-item.on .toggle-text {
   color: #ffffff;
+}
+.stox-analytics {
+  margin-top: 12px;
+  padding: 12px;
+  background: #f3f4f6;   /* slightly darker grey */
+  border-radius: 10px;
+  font-size: 14px;
+  line-height: 1.8;
+  border: 1px solid #e5e7eb;
+  color: #111827;        /* strong dark text */
+  font-weight: 500;      /* stronger base weight */
 }
 
 

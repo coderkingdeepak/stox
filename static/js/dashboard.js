@@ -701,6 +701,8 @@ if (stoxMic) {
   }
 // 🧠 CONTEXT MEMORY (PHASE 2.2.4)
   let lastStockContext = null;
+  let isLoading = false;
+
   /* =========================
    STOCK INTELLIGENCE DATABASE (PHASE 3.3)
 ========================= */
@@ -759,14 +761,71 @@ function renderStoxCard(response) {
     });
 }
 
+// ==========================
+// ANALYTICS BLOCK (Phase 5.2)
+// ==========================
+
+if (
+  response.risk_score !== undefined ||
+  response.sentiment ||
+  response.confidence
+) {
+
+  const analytics = document.createElement("div");
+  analytics.className = "stox-analytics";
+
+  // Risk Score
+  if (response.risk_score !== undefined) {
+    const risk = document.createElement("div");
+   risk.innerHTML = `
+📊 Risk Score: 
+<span class="stox-strong">
+${response.risk_score} / 10
+</span>`;
+
+    analytics.appendChild(risk);
+  }
+
+  // Sentiment
+if (response.sentiment) {
+  const sentiment = document.createElement("div");
+
+  sentiment.textContent = "📈 Sentiment: ";
+
+  const sentimentValue = document.createElement("span");
+  sentimentValue.classList.add("stox-sentiment");
+  sentimentValue.textContent = response.sentiment;
+
+  if (response.sentiment === "Bullish") {
+    sentimentValue.classList.add("bullish");
+  }
+  if (response.sentiment === "Bearish") {
+    sentimentValue.classList.add("bearish");
+  }
+  if (response.sentiment === "Neutral") {
+    sentimentValue.classList.add("neutral");
+  }
+
+  sentiment.appendChild(sentimentValue);
+  analytics.appendChild(sentiment);
+}
+
 
   // Confidence
-  if (response.confidence) {
-    const badge = document.createElement("div");
-    badge.className = "stox-confidence";
-    badge.textContent = `Confidence: ${response.confidence}%`;
-    wrapper.appendChild(badge);
+  if (response.confidence !== undefined) {
+    const conf = document.createElement("div");
+    conf.innerHTML = `
+🎯 Confidence: 
+<span class="stox-strong">
+${response.confidence}%
+</span>`;
+
+    analytics.appendChild(conf);
   }
+
+  wrapper.appendChild(analytics);
+}
+
 
   stoxMessages.appendChild(wrapper);
 
@@ -844,49 +903,95 @@ function renderAppleCard(data) {
 
 
 async function sendStoxMessage() {
+
+  if (isLoading) return;
+
   const text = stoxInput.value.trim();
   if (!text) return;
+
+  isLoading = true;
+  stoxSend.disabled = true;
+  stoxSend.style.opacity = "0.6";
 
   addStoxMessage(text, "user");
   stoxInput.value = "";
 
-  // 🔥 Call Brain Here
- // 🔥 Call Backend AI Endpoint
-const apiResponse = await fetch("/stox_ai", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify({
-    message: text,
-    context: {
-      lastStock: lastStockContext
+  // 🔄 Thinking Indicator
+  const thinkingMsg = document.createElement("div");
+  thinkingMsg.className = "stox-msg thinking";
+  thinkingMsg.textContent = "STOX is thinking...";
+  stoxMessages.appendChild(thinkingMsg);
+
+  const bodyScroll = stoxMessages.parentElement;
+  bodyScroll.scrollTop = bodyScroll.scrollHeight;
+
+  let data;
+
+  try {
+    const apiResponse = await fetch("/stox_ai", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        message: text,
+        context: {
+          lastStock: lastStockContext
+        }
+      })
+    });
+
+    if (!apiResponse.ok) {
+      throw new Error("Server error");
     }
-  })
-});
 
-const data = await apiResponse.json();
-const response = data.response;
+    data = await apiResponse.json();
 
-if (!response) {
-  addStoxMessage("System error.");
-  return;
-}
+  } catch (error) {
+    console.error("Network error:", error);
 
+    thinkingMsg.remove();
+    addStoxMessage("⚠ Network error. Please try again.");
+
+    isLoading = false;
+    stoxSend.disabled = false;
+    stoxSend.style.opacity = "1";
+    return;
+  }
+
+  const response = data.response;
+
+  // Remove thinking indicator
+  thinkingMsg.remove();
+
+  if (!response) {
+    addStoxMessage("⚠ Unexpected response from server.");
+
+    isLoading = false;
+    stoxSend.disabled = false;
+    stoxSend.style.opacity = "1";
+    return;
+  }
 
   // Update memory
   if (response.updatedContext) {
     lastStockContext = response.updatedContext;
   }
 
- // If AI response is structured → use Apple card
-if (response.body.includes("COMPETITIVE_ADVANTAGES:")) {
+  // Structured AI card or normal card
+  if (response.body && response.body.includes("COMPETITIVE_ADVANTAGES:")) {
     renderAppleCard(data);
-} else {
+  } else {
     renderStoxCard(response);
+  }
+
+  // Reset loading state
+  isLoading = false;
+  stoxSend.disabled = false;
+  stoxSend.style.opacity = "1";
 }
 
-}
+
 
 
   // click send

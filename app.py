@@ -4,12 +4,22 @@ import os
 # Load environment variables
 load_dotenv()
 
-
+from flask import Flask, render_template, redirect, url_for, request, jsonify, session
 
 # Import AI clients
 from openai import OpenAI
 from google import genai
 from groq import Groq
+from core.model_router import choose_model
+from core.memory_engine import update_memory, get_previous_context, build_context_prompt
+from core.risk_engine import analyze_risk
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
+
 
 # Initialize clients
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -18,12 +28,23 @@ client_groq = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 
 
-from flask import Flask, render_template, redirect, url_for, request, jsonify, session
+
 import requests
 import json
 
 app = Flask(__name__)
+
+# Load secret key securely
 app.secret_key = os.getenv("FLASK_SECRET_KEY")
+
+# Environment mode
+ENV_MODE = os.getenv("FLASK_ENV", "development")
+
+if ENV_MODE == "production":
+    app.config["DEBUG"] = False
+else:
+    app.config["DEBUG"] = True
+
 OPENAI_ENABLED = True
 GEMINI_ENABLED = True
 GROQ_ENABLED = True
@@ -91,7 +112,7 @@ def apply_personality(title, body, confidence, category="general"):
 
 
 # ✅ EODHD API KEY
-API_KEY = "6992ad38352584.18657888"
+API_KEY = "6995443287f2e7.56824660"
 
 # ===== STOCK SYMBOLS =====
 SYMBOL_NVDA = "NVDA"
@@ -264,269 +285,216 @@ def stock_data(symbol):
         "price": data.get("close"),
         "timestamp": data.get("timestamp")
     })
-# ===============================
-# STOX AI BACKEND (PHASE 4.5)
-# Professional + Confident Tone
-# ===============================
-
 @app.route("/stox_ai", methods=["POST"])
+@limiter.limit("10 per minute")
 def stox_ai():
 
+    # -------------------------
+    # GET MESSAGE
+    # -------------------------
     data = request.get_json()
-    user_message = data.get("message", "")
-    msg = user_message.lower().strip()
+    user_message = data.get("message", "").strip()
 
-    previous_stock = session.get("last_stock", None)
-    SYSTEM_PROMPT = """
-You are STOX, a professional AI stock intelligence assistant.
+    # ------------------------- 
+    # VALIDATION
+    # -------------------------
+    if not user_message:
+        return jsonify({
+            "mode": "system",
+            "response": {
+                "title": "⚠ Invalid Input",
+                "body": "Message cannot be empty.",
+                "confidence": 0
+            }
+        }), 400
 
-Respond strictly in this format:
+    # -------------------------
+    # GREETING FILTER (ADD HERE)
+    # -------------------------
+    simple_inputs = ["hello", "hi", "hey", "thanks", "thank you", "help"]
 
-SUMMARY:
-<2-3 sentence structured summary>
+    if user_message.lower() in simple_inputs:
+        return jsonify({
+            "mode": "system",
+            "response": {
+                "title": "🤖 STOX Assistant",
+                "body": "Hello. I'm STOX, your professional AI stock intelligence assistant. "
+                        "How can I assist you today?",
+                "confidence": 100
+            }
+        })    
 
-COMPETITIVE_ADVANTAGES:
-- bullet
-- bullet
 
-RISKS:
-- bullet
-- bullet
+    # -------------------------
+    # MODEL ROUTING
+    # -------------------------
+    selected_model = choose_model(user_message)
+    contextual_message = build_context_prompt(user_message)
+    print("Primary model:", selected_model)
 
-FUTURE_OUTLOOK:
-- bullet
-- bullet
-
-Professional tone only.
-No emojis.
-No disclaimers.
-"""
-
-    # =========================
-    # OPENAI MODE
-    # =========================
-    if OPENAI_ENABLED:
-        try:
-            print("🔥 Trying OpenAI...")
+    ai_text = None
+    mode_used = None
+    # -------------------------
+    # MODEL EXECUTION
+    # -------------------------
+    try:
+        if selected_model == "openai" and OPENAI_ENABLED:
+            logger.info("Trying OpenAI")
 
             completion = client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[
                     {
                         "role": "system",
-                        "content":
-                        "You are STOX, a professional AI stock intelligence assistant. "
-                        "Tone: confident, structured, professional, not giving financial advice."
+                        "content": "You are STOX..."
                     },
                     {
                         "role": "user",
-                        "content": user_message
+                        "content": contextual_message
                     }
-                ]
+                ],
+                timeout=15
             )
 
             ai_text = completion.choices[0].message.content
+            mode_used = "openai"
 
-            return jsonify({
-                "mode": "openai",
-                "response": {
-                    "title": "🧠 STOX AI Analysis",
-                    "body": ai_text,
-                    "confidence": 95
-                }
-            })
-
-        except Exception as e:
-            print("OpenAI failed:", e)
-
-    # =========================
-    # GEMINI MODE
-    # =========================
-    if GEMINI_ENABLED:
-        try:
-            print("🟣 Trying Gemini...")
+        elif selected_model == "gemini" and GEMINI_ENABLED:
+            logger.info("Trying Gemini")
 
             response = client_gemini.models.generate_content(
                 model="gemini-2.0-flash",
                 contents=f"""
-                You are STOX, a professional AI stock intelligence assistant.
-                Tone: confident, structured, professional, not giving financial advice.
-
-                User Question:
-                {user_message}
+                You are STOX...
+                {contextual_message}
                 """
             )
 
             ai_text = response.text
+            mode_used = "gemini"
 
-            return jsonify({
-                "mode": "gemini",
-                "response": {
-                    "title": "🧠 STOX AI Analysis",
-                    "body": ai_text,
-                    "confidence": 93
-                }
-            })
-
-        except Exception as e:
-            print("Gemini failed:", e)
-
-    # =========================
-    # GROQ MODE
-    # =========================
-    if GROQ_ENABLED:
-        try:
-            print("🟢 Trying Groq...")
+        elif GROQ_ENABLED:
+            logger.info("Trying Groq")
 
             completion = client_groq.chat.completions.create(
                 model="llama-3.3-70b-versatile",
-
                 messages=[
                     {
                         "role": "system",
-                        "content":
-                        "You are STOX, a professional AI stock intelligence assistant. "
-                        "Tone: confident, structured, professional, not giving financial advice."
+                        "content": "You are STOX..."
                     },
                     {
                         "role": "user",
-                        "content": user_message
+                        "content": contextual_message
                     }
-                ]
+                ],
+                timeout=15
             )
 
             ai_text = completion.choices[0].message.content
+            mode_used = "groq"
 
-            return jsonify({
-                "mode": "groq",
-                "response": {
-                    "title": "🧠 STOX AI Analysis",
-                    "body": ai_text,
-                    "confidence": 92
-                }
-            })
+    except Exception as e:
+        logger.error(f"Primary model failed: {str(e)}")
+
+
+
+    # -------------------------
+    # FALLBACK TO GROQ
+    # -------------------------
+    if not ai_text and GROQ_ENABLED:
+        try:
+            logger.info("Fallback to Groq")
+
+            completion = client_groq.chat.completions.create(
+                model="llama-3.3-70b-versatile",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are STOX..."
+                    },
+                    {
+                        "role": "user",
+                        "content": contextual_message
+                    }
+                ],
+                timeout=15
+            )
+
+            ai_text = completion.choices[0].message.content
+            mode_used = "groq"
 
         except Exception as e:
-            print("Groq failed:", e)
+            logger.error(f"Fallback failed: {str(e)}")
 
-    # =========================
-    # PERSONALITY ENGINE
-    # =========================
-    def format_response(title, body, confidence, category="general"):
 
-        if category == "future":
-            body += (
-                "\n\nThe growth trajectory remains influenced by broader market "
-                "conditions, industry competition, and strategic execution."
-            )
 
-        elif category == "risk":
-            body += (
-                "\n\nRisk exposure should be evaluated within the context of "
-                "overall portfolio strategy and market volatility."
-            )
+    # -------------------------
+    # RETURN AI RESPONSE
+    # -------------------------
+    if ai_text:
 
-        elif category == "overview":
-            body += (
-                "\n\nThis overview highlights the company’s core positioning "
-                "within its sector."
-            )
+        update_memory(user_message, ai_text)
 
-        if category in ["future", "risk"]:
-            body += (
-                "\n\n⚠ This analysis is provided for informational purposes only "
-                "and does not constitute financial advice."
-            )
+        financial_keywords = [
+            "stock", "share", "market", "risk", "investment",
+            "growth", "analysis", "price", "company"
+        ]
 
-        return {
-            "title": title,
-            "body": body.strip(),
-            "confidence": confidence
+        if any(word in user_message.lower() for word in financial_keywords):
+            risk_analysis = analyze_risk(ai_text)
+        else:
+            risk_analysis = {
+                "risk_score": None,
+                "sentiment": None,
+                "confidence": 90
+            }
+
+        response_payload = {
+            "title": "🧠 STOX AI Analysis",
+            "body": ai_text,
+            "confidence": risk_analysis["confidence"]
         }
 
-    # =========================
-    # LOCAL STOCK MATCHING
-    # =========================
-    for key, stock in STOCK_DATABASE.items():
+        # Only include analytics if available
+        if risk_analysis["risk_score"] is not None:
+            response_payload["risk_score"] = risk_analysis["risk_score"]
+            response_payload["sentiment"] = risk_analysis["sentiment"]
 
-        if key in msg or stock["name"].lower() in msg:
+        return jsonify({
+            "mode": "stox-ai",
+            "response": response_payload
+        })
+        
 
-            session["last_stock"] = key
-
-            if "future" in msg or "growth" in msg:
-                return jsonify({
-                    "mode": "local",
-                    "response": format_response(
-                        f"🚀 GROWTH OUTLOOK — {stock['name'].upper()}",
-                        f"{stock['future']}\n\nRisk Consideration:\n{stock['risk']}",
-                        83,
-                        "future"
-                    )
-                })
-
-            if "risk" in msg:
-                return jsonify({
-                    "mode": "local",
-                    "response": format_response(
-                        f"⚠ RISK ANALYSIS — {stock['name'].upper()}",
-                        f"{stock['risk']}\n\nGrowth Perspective:\n{stock['future']}",
-                        79,
-                        "risk"
-                    )
-                })
-
-            return jsonify({
-                "mode": "local",
-                "response": format_response(
-                    f"📊 OVERVIEW — {stock['name'].upper()}",
-                    f"{stock['description']}\n\nSector: {stock['sector']}",
-                    90,
-                    "overview"
-                )
-            })
-
-    # =========================
-    # FOLLOW-UP MEMORY
-    # =========================
-    if previous_stock and previous_stock in STOCK_DATABASE:
-
-        stock = STOCK_DATABASE[previous_stock]
-
-        if "future" in msg or "growth" in msg:
-            return jsonify({
-                "mode": "local",
-                "response": format_response(
-                    f"🚀 CONTINUED OUTLOOK — {stock['name'].upper()}",
-                    stock["future"],
-                    80,
-                    "future"
-                )
-            })
-
-        if "risk" in msg:
-            return jsonify({
-                "mode": "local",
-                "response": format_response(
-                    f"⚠ CONTINUED RISK REVIEW — {stock['name'].upper()}",
-                    stock["risk"],
-                    76,
-                    "risk"
-                )
-            })
-
-    # =========================
-    # FINAL FALLBACK
-    # =========================
+    
+    # -------------------------
+    # AI FAILURE / SERVICE UNAVAILABLE
+    # -------------------------
     return jsonify({
-        "mode": "local",
-        "response": format_response(
-            "🤖 STOX",
-            "I did not fully understand your request. "
-            "You may ask about a company's overview, growth outlook, or risk profile.",
-            60
-        )
-    })
+        "mode": "system",
+        "response": {
+            "title": "⚠ AI Service Unavailable",
+            "body": "The AI service is temporarily unavailable. Please try again later.",
+            "confidence": 0
+       }
+   }), 503
+    
+@app.errorhandler(Exception)
+def handle_exception(e):
+    print("Internal Server Error:", e)
+
+    return jsonify({
+        "mode": "system",
+        "response": {
+            "title": "⚠ System Error",
+            "body": "An unexpected error occurred. Please try again later.",
+            "confidence": 0
+        }
+    }), 500
+
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()
+
