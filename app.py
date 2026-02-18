@@ -54,7 +54,7 @@ from flask_limiter.util import get_remote_address
 limiter = Limiter(
     get_remote_address,
     app=app,
-    default_limits=["30 per minute"]
+    default_limits=["100 per minute"]
 )
 
 
@@ -273,6 +273,7 @@ def dashboard(username):
 
 # API endpoint for real-time JS updates every 10 sec
 @app.route("/stock_data/<symbol>")
+@limiter.limit("120 per minute")
 def stock_data(symbol):
     url = f"https://eodhd.com/api/real-time/{symbol}.US?api_token={API_KEY}&fmt=json"
     try:
