@@ -1,0 +1,8 @@
+flask
+gunicorn
+python-dotenv
+openai
+groq
+google-generativeai
+flask-limiter
+requests
