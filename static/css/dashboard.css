@@ -618,6 +618,15 @@
 .fav-btn.active {
   color: #e63946;
 }
+.fav-btn {
+  font-size: 18px;
+  transition: transform 0.2s ease;
+}
+
+.fav-btn.active {
+  color: #e63946;
+  transform: scale(1.2);
+}
 
 /* Modal header */
 .stock-header h2 {

@@ -6,3 +6,6 @@ groq
 google-generativeai
 flask-limiter
 requests
+Flask-Caching
+google-generativeai
+

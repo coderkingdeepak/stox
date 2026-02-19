@@ -14,19 +14,16 @@ from core.model_router import choose_model
 from core.memory_engine import update_memory, get_previous_context, build_context_prompt
 from core.risk_engine import analyze_risk
 import logging
-
+from flask_caching import Cache
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-
 
 
 # Initialize clients
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 client_groq = Groq(api_key=os.getenv("GROQ_API_KEY"))
-
-
+API_KEY = os.getenv("EODHD_API_KEY")
 
 
 import requests
@@ -36,6 +33,12 @@ app = Flask(__name__)
 
 # Load secret key securely
 app.secret_key = os.getenv("FLASK_SECRET_KEY")
+
+# ✅ Initialize cache ONLY ONCE
+cache = Cache(app, config={
+    "CACHE_TYPE": "SimpleCache",
+    "CACHE_DEFAULT_TIMEOUT": 300  # 5 minutes
+})
 
 # Environment mode
 ENV_MODE = os.getenv("FLASK_ENV", "development")
@@ -87,6 +90,39 @@ STOCK_DATABASE = {
     }
 }
 # ===============================
+# WATCHLIST SYSTEM (Phase 5.5)
+# ===============================
+
+@app.route("/watchlist/toggle", methods=["POST"])
+def toggle_watchlist():
+    data = request.get_json()
+    symbol = data.get("symbol")
+
+    if "watchlist" not in session:
+        session["watchlist"] = []
+
+    watchlist = session["watchlist"]
+
+    if symbol in watchlist:
+        watchlist.remove(symbol)
+        status = "removed"
+    else:
+        watchlist.append(symbol)
+        status = "added"
+
+    session["watchlist"] = watchlist
+
+    return jsonify({
+        "status": status,
+        "watchlist": watchlist
+    })
+
+
+@app.route("/watchlist/get")
+def get_watchlist():
+    return jsonify(session.get("watchlist", []))
+
+# ===============================
 # STOX PERSONALITY ENGINE
 # ===============================
 
@@ -111,8 +147,7 @@ def apply_personality(title, body, confidence, category="general"):
     }
 
 
-# ✅ EODHD API KEY
-API_KEY = "6995443287f2e7.56824660"
+
 
 # ===== STOCK SYMBOLS =====
 SYMBOL_NVDA = "NVDA"
@@ -272,6 +307,7 @@ def dashboard(username):
 
 
 # API endpoint for real-time JS updates every 10 sec
+@cache.cached(timeout=60)
 @app.route("/stock_data/<symbol>")
 @limiter.limit("120 per minute")
 def stock_data(symbol):
@@ -286,6 +322,7 @@ def stock_data(symbol):
         "price": data.get("close"),
         "timestamp": data.get("timestamp")
     })
+     
 @app.route("/stox_ai", methods=["POST"])
 @limiter.limit("10 per minute")
 def stox_ai():
@@ -325,16 +362,34 @@ def stox_ai():
             }
         })    
 
+    # -------------------------
+    # VALIDATION
+    # -------------------------
+
+    if not user_message:
+        return jsonify({"error": "Empty message"}), 400
+
+
+    # -------------------------
+    # CACHE CHECK (Phase 5.4)
+    # -------------------------
+
+    cache_key = f"ai:{user_message.lower().strip()}"
+
+    cached_response = cache.get(cache_key)
+    if cached_response:
+        print("⚡ Returning cached AI response")
+        return jsonify(cached_response)
+
 
     # -------------------------
     # MODEL ROUTING
     # -------------------------
+
     selected_model = choose_model(user_message)
     contextual_message = build_context_prompt(user_message)
-    print("Primary model:", selected_model)
 
-    ai_text = None
-    mode_used = None
+    
     # -------------------------
     # MODEL EXECUTION
     # -------------------------
@@ -441,6 +496,7 @@ def stox_ai():
 
         update_memory(user_message, ai_text)
 
+        # Financial keyword filter
         financial_keywords = [
             "stock", "share", "market", "risk", "investment",
             "growth", "analysis", "price", "company"
@@ -456,22 +512,21 @@ def stox_ai():
             }
 
         response_payload = {
-            "title": "🧠 STOX AI Analysis",
-            "body": ai_text,
-            "confidence": risk_analysis["confidence"]
+            "mode": mode_used,
+            "response": {
+                "title": "🧠 STOX AI Analysis",
+                "body": ai_text,
+                "risk_score": risk_analysis["risk_score"],
+                "sentiment": risk_analysis["sentiment"],
+                "confidence": risk_analysis["confidence"]
+            }
         }
 
-        # Only include analytics if available
-        if risk_analysis["risk_score"] is not None:
-            response_payload["risk_score"] = risk_analysis["risk_score"]
-            response_payload["sentiment"] = risk_analysis["sentiment"]
+        # Save to cache
+        cache.set(cache_key, response_payload, timeout=300)
 
-        return jsonify({
-            "mode": "stox-ai",
-            "response": response_payload
-        })
-        
-
+        return jsonify(response_payload)
+    
     
     # -------------------------
     # AI FAILURE / SERVICE UNAVAILABLE

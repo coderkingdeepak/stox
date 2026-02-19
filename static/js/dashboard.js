@@ -60,6 +60,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const modalOverlay = document.getElementById("modalOverlay");
   const stockObjects = {};
+  async function loadWatchlist() {
+    try {
+      const res = await fetch("/watchlist/get");
+      const watchlist = await res.json();
+
+      stocks.forEach(stock => {
+        if (watchlist.includes(stock.symbol)) {
+          const modal = document.getElementById(stock.modalId);
+          const favBtn = modal?.querySelector(".fav-btn");
+          if (favBtn) favBtn.classList.add("active");
+        }
+      });
+
+    } catch (error) {
+      console.log("Watchlist load error");
+    }
+  }
+
+  loadWatchlist();
 
   /* ==========================
      STOCK MODALS + CHARTS
@@ -164,7 +183,30 @@ function closeModal() {
 
     card.addEventListener("click", openModal);
     closeBtn?.addEventListener("click", closeModal);
-    favBtn?.addEventListener("click", () => favBtn.classList.toggle("active"));
+    favBtn?.addEventListener("click", async () => {
+
+      try {
+        const response = await fetch("/watchlist/toggle", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ symbol: stock.symbol })
+        });
+
+        const data = await response.json();
+
+        if (data.status === "added") {
+          favBtn.classList.add("active");
+        } else {
+          favBtn.classList.remove("active");
+        }
+
+      } catch (error) {
+        console.log("Watchlist error:", error);
+      }
+
+    });
+    
+
     fullscreenBtn?.addEventListener("click", () => {
       !document.fullscreenElement ? modal.requestFullscreen() : document.exitFullscreen();
     });
